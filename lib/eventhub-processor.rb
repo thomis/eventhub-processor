@@ -3,8 +3,10 @@ require 'bunny'
 require 'rest-client'
 require 'json'
 require 'singleton'
+require 'uuidtools'
 
 require_relative 'eventhub/version'
+require_relative 'eventhub/constant'
 require_relative 'eventhub/multi_logger'
 
 require_relative 'eventhub/configuration'

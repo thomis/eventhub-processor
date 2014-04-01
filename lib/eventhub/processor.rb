@@ -84,6 +84,7 @@ module EventHub
 					end
 				rescue => e
 					EventHub.logger.error("Unexpected exception: #{e}")
+					EventHub.logger.save_detailed_error(e)
 				end
 
 			end # while
@@ -148,6 +149,13 @@ module EventHub
 
       confirmed
 		end
+
+		def format_raw_string(message,max_characters=80) 
+	    max_characters = 5 if max_characters < 5
+	    m = message.gsub(/\r\n/m,";")
+	    return (m[0..max_characters-3] + "...") if m.size > max_characters
+	    return m
+  	end
 
 	end
 end

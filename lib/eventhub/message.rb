@@ -1,5 +1,5 @@
 module EventHub
-  
+
   class Message
 
     VERSION = '1.0.0'
@@ -37,9 +37,9 @@ module EventHub
 
     def self.from_json(json)
       data = JSON.parse(json)
-      Eventhub::Message.new(data.get('header'), data.get('body'),json)
+      Message.new(data.get('header'), data.get('body'),json)
     rescue => e
-      Eventhub::Message.new({ "status" =>  { "code" => STATUS_INVALID, "message" => "JSON parse error: #{e}" }} ,{},json)
+      Message.new({ "status" =>  { "code" => STATUS_INVALID, "message" => "JSON parse error: #{e}" }} ,{},json)
     end
 
     # process_step_position should be
@@ -98,7 +98,7 @@ module EventHub
       copied_body   = self.body.dup
 
       args.each { |key,value| copied_header.set(key,value) } if args.is_a?(Hash)
-      Eventhub::Message.new(copied_header, copied_body)
+      Message.new(copied_header, copied_body)
     end  
 
   end
