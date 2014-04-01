@@ -1,7 +1,7 @@
 eventhub-processor
 =================
 
-Gem to build Event Hub processor
+Gem to build Event Hub Processors. It gives you some core infrastructure pieces to easily implement a customized Event Hub Processor.
 
 ## Installation
 
