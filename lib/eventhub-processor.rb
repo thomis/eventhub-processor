@@ -1,4 +1,5 @@
 require 'amqp'
+require 'bunny'
 require 'rest-client'
 require 'json'
 require 'singleton'

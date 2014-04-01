@@ -23,4 +23,5 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency "rest-client"
   spec.add_runtime_dependency "amqp"
+  spec.add_runtime_dependency "bunny"
 end

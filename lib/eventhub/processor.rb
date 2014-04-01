@@ -41,30 +41,34 @@ module EventHub
 
 				begin 
 					AMQP.start(configuration.get('server')) do |connection, open_ok|
+
+						@connection = connection
 						
 						# deal with tcp connection issues
-						connection.on_tcp_connection_loss do |conn, settings|
+						@connection.on_tcp_connection_loss do |conn, settings|
 				  		EventHub.logger.warn("Processor lost tcp connection. Trying to restart in 5 seconds...")
 				  		sleep 5
 				    	EventMachine.stop
 				  	end
 
 						# create channel
-						channel = AMQP::Channel.new(connection)
-				  	channel.auto_recovery = true
+						@channel = AMQP::Channel.new(@connection)
+				  	@channel.auto_recovery = true
 				  
 				  	# connect to queue
-				  	queue = channel.queue(configuration.get('processor.queue'), durable: true, auto_delete: false)
+				  	@queue = @channel.queue(queue_name, durable: true, auto_delete: false)
 
 				  	# subscribe to queue
-					  queue.subscribe do |metadata, payload|
+					  @queue.subscribe(:ack => true) do |metadata, payload|
 					  	handle_heartbeat(payload)
-					  	handle_message(metadata,payload)
+					  	if handle_message(metadata,payload)
+					  		metadata.ack
+					  	end
 					  end
 
 						# Features to stop main event loop
 						stop_main_loop = Proc.new {
-					    connection.disconnect { 
+					    @connection.disconnect { 
 					    	EventHub.logger.info("Processor is stopping main event loop")
 					    	EventMachine.stop
 					    	restart = false
@@ -79,8 +83,7 @@ module EventHub
 					  EventHub.logger.info("Processor is listening to queue [#{[configuration.get('server.vhost'),configuration.get('processor.queue')].compact.join(".")}]")
 					end
 				rescue => e
-					EventHub.logger.error("Unexpected exception: #{e}. Trying to restart in 5 seconds...")
-					sleep 5
+					EventHub.logger.error("Unexpected exception: #{e}")
 				end
 
 			end # while
@@ -123,16 +126,27 @@ module EventHub
 			EventMachine.add_timer(watchdog_cycle) { watchdog }
 		end
 
-		def sent_to_dispatcher(payload)
-			# send_connection = AMQP.connect({hostname: self.hostname, user: self.user, password: self.password, vhost: "event_hub"})
-  		
-  	# 	send_channel  = AMQP::Channel.new(send_connection)
-  	# 	send_exchange = send_channel.direct("")
+		def send_to_dispatcher(payload)
+			confirmed = true
 
-  	# 	send_exchange.publish payload, :routing_key => 'inbound'
-		
-			# send_channel.close
-			# send_conncetion.close
+			connection = Bunny.new({hostname: self.hostname, user: self.user, password: self.password, vhost: "event_hub"})
+			connection.start
+
+			channel = connection.create_channel
+      channel.confirm_select
+
+    	channel.default_exchange.publish(payload,routing_key: 'inbound', persistent: true)
+    	success = channel.wait_for_confirms
+
+    	if !success
+      	EventHub.logger.error("Message has not been confirmed by the server to be received !!!")
+    		confirmed = false
+    	end
+
+      channel.close   
+      connection.close
+
+      confirmed
 		end
 
 	end
