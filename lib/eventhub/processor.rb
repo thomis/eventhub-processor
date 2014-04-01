@@ -1,8 +1,8 @@
 module EventHub
 	class Processor
 
-		def hostname
-			configuration.get('server.hostname') || 'localhost'
+		def host
+			configuration.get('server.host') || 'localhost'
 		end
 
 		def user
@@ -102,7 +102,7 @@ module EventHub
 
 		def watchdog
 			begin
-				response = RestClient.get "http://#{self.user}:#{self.password}@#{hostname}:#{management_port}/api/queues/#{self.vhost}/#{self.queue_name}/bindings", { :content_type => :json}
+				response = RestClient.get "http://#{self.user}:#{self.password}@#{host}:#{management_port}/api/queues/#{self.vhost}/#{self.queue_name}/bindings", { :content_type => :json}
   			data = JSON.parse(response.body)
   	
   			if response.code != 200
@@ -130,7 +130,7 @@ module EventHub
 		def send_to_dispatcher(payload)
 			confirmed = true
 
-			connection = Bunny.new({hostname: self.hostname, user: self.user, password: self.password, vhost: "event_hub"})
+			connection = Bunny.new({hostname: self.host, user: self.user, password: self.password, vhost: "event_hub"})
 			connection.start
 
 			channel = connection.create_channel
