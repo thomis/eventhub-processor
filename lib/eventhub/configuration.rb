@@ -2,6 +2,7 @@ module EventHub
 
 	class Configuration
 		include Singleton
+    include Helper
 
 		attr_accessor :data
   	
@@ -12,7 +13,11 @@ module EventHub
   	def load_file(input, env='development')
     	tmp = JSON.parse( IO.read(input))
   		@data = tmp[env]
-  	end
+      true
+    rescue => e
+      EventHub.logger.info("Unexpected exception while loading configuration [#{input}]: #{format_raw_string(e.message)}")
+  	  false
+    end
 
 	end
 

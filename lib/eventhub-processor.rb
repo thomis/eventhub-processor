@@ -4,9 +4,11 @@ require 'rest-client'
 require 'json'
 require 'singleton'
 require 'uuidtools'
+require 'base64'
 
 require_relative 'eventhub/version'
 require_relative 'eventhub/constant'
+require_relative 'eventhub/helper'
 require_relative 'eventhub/multi_logger'
 
 require_relative 'eventhub/configuration'

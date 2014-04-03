@@ -35,15 +35,15 @@ module EventHub
       end
     end
 
-    def self.from_json(json)
-      data = JSON.parse(json)
-      Message.new(data.get('header'), data.get('body'),json)
+    def self.from_json(raw)
+      data = JSON.parse(raw)
+      Message.new(data.get('header'), data.get('body'),raw)
     rescue => e
-      Message.new({ "status" =>  { "code" => STATUS_INVALID, "message" => "JSON parse error: #{e}" }} ,{},json)
+      Message.new({ "status" =>  { "code" => STATUS_INVALID, "message" => "JSON parse error: #{e}" }} ,{ "original_message_base64_encoded" => Base64.encode64(raw)},raw)
     end
 
     # process_step_position should be
-    def initialize(header, body,raw=nil)
+    def initialize(header=nil, body=nil,raw=nil)
 
       @header = header || {}
       @body   = body || {}

@@ -15,8 +15,16 @@ end
 module EventHub
 
   class MultiLogger
-    def initialize(*targets)
-        @targets = targets
+
+    attr_accessor :folder, :devices
+
+    def initialize(folder=nil)
+        @folder = folder || Dir.pwd
+        @devices = []
+    end
+
+    def add_device(device)
+      @devices << device
     end
 
     def save_detailed_error(feedback,message=nil)
@@ -24,9 +32,9 @@ module EventHub
       stamp = "#{time.strftime("%Y%m%d_%H%M%S")}_#{"%03d" % (time.usec/1000)}"
       filename = "#{stamp}.log"
 
-    	FileUtils.makedirs("exceptions")
+    	FileUtils.makedirs("#{folder}/exceptions")
 
-      File.open("exceptions/#{filename}","w") do |output|
+      File.open("#{@folder}/exceptions/#{filename}","w") do |output|
         output.write("#{feedback}\n\n")
         output.write("Exception: #{feedback.class.to_s}\n\n")
         output.write("Call Stack:\n")
@@ -37,7 +45,7 @@ module EventHub
 
       # save message if provided
       if message
-  	    File.open("exceptions/#{stamp}.msg.raw","wb") do |output|
+  	    File.open("#{@folder}/exceptions/#{stamp}.msg.raw","wb") do |output|
   	    	output.write(message)
   	    end
     	end	
@@ -47,7 +55,7 @@ module EventHub
 
     %w(log debug info warn error).each do |m|
       define_method(m) do |*args|
-          @targets.map { |t| t.send(m, *args) }
+          @devices.map { |d| d.send(m, *args) }
       end
     end
 
