@@ -1,6 +1,7 @@
 module EventHub
 
   class Message
+    include Helper
 
     VERSION = '1.0.0'
 
@@ -50,23 +51,27 @@ module EventHub
       @raw    = raw
 
       # set message defaults, that we have required headers
-      now = Time.now
       @header.set('message_id',UUIDTools::UUID.timestamp_create.to_s,false)
       @header.set('version',VERSION,false)
-      @header.set('created_at',now.utc.strftime("%Y-%m-%dT%H:%M:%S.#{now.usec/1000}Z"),false)
+      @header.set('created_at',now_stamp,false)
 
-      @header.set('process.name',nil,false)
+      @header.set('origin.module_id','undefined',false)
+      @header.set('origin.type','undefined',false)
+      @header.set('origin.site_id','undefined',false)
+
+      @header.set('process.name','undefined',false)
       @header.set('process.execution_id',UUIDTools::UUID.timestamp_create.to_s,false)
       @header.set('process.step_position',0,false)
 
       @header.set('status.retried_count',0,false)
       @header.set('status.code',STATUS_INITIAL,false)
-      @header.set('status.message',nil,false)
+      @header.set('status.message','',false)
 
     end
 
     def valid?
-      REQUIRED_HEADERS.all? { |key| @header.all_keys_with_path.include?(key) }
+      # check for existence and defined value
+      REQUIRED_HEADERS.all? { |key| @header.all_keys_with_path.include?(key) && !!self.send(key.gsub(/\./,"_").to_sym)}
     end
 
     def success?
@@ -90,14 +95,19 @@ module EventHub
     end
 
     def to_s
-      "Message: message_id [#{self.message_id}], status.code [#{status_code}], status.message [#{status_message}], status.retried_count [#{status_retried_count}] "
+      "Msg: process [#{self.process_name},#{self.process_step_position},#{self.process_execution_id}], status [#{self.status_code},#{self.status_message},#{self.status_retried_count}]"
     end
 
-    def copy(args={})
-      copied_header = self.header.dup
+    # copies the message and set's provided status code (default: success), actual stamp, and a new message id
+    def copy(status_code=STATUS_SUCCESS)
+      
+      copied_header = self.header.dup 
       copied_body   = self.body.dup
 
-      args.each { |key,value| copied_header.set(key,value) } if args.is_a?(Hash)
+      copied_header.set("message_id",UUIDTools::UUID.timestamp_create.to_s)
+      copied_header.set("created_at",now_stamp)
+      copied_header.set("status.code",status_code)
+
       Message.new(copied_header, copied_body)
     end  
 
