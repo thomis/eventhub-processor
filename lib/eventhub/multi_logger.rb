@@ -19,8 +19,10 @@ module EventHub
     attr_accessor :folder, :devices
 
     def initialize(folder=nil)
-        @folder = folder || Dir.pwd
+        @folder = folder || (Dir.pwd + '/log')
         @devices = []
+
+        FileUtils.makedirs(@folder)
     end
 
     def add_device(device)

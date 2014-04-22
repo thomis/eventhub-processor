@@ -5,6 +5,10 @@ module EventHub
 
 		include Helper
 
+		def version
+			"1.0.0"
+		end
+
 		def initialize(name=nil)
 			@name = name || class_to_array(self.class)[1..-1].join(".")
 			@folder = Dir.pwd
@@ -14,6 +18,9 @@ module EventHub
 			@messages_successful 		= 0
 			@messages_unsuccessful 	= 0
 
+
+			@channel_receiver = nil
+			@channel_sender		= nil
 			@restart = true
 		end
 
@@ -66,8 +73,6 @@ module EventHub
 
 			EventHub.logger.info("Processor [#{@name}] base folder [#{@folder}]")
 
-			channel = nil
-
 			while @restart
 
 				begin 
@@ -82,10 +87,10 @@ module EventHub
 				  	end
 
 						# create channel
-						channel = AMQP::Channel.new(@connection)
-				  
+						@channel_receiver = AMQP::Channel.new(@connection, prefetch: 1)
+
 				  	# connect to queue
-				  	@queue = channel.queue(self.listener_queue, durable: true, auto_delete: false)
+				  	@queue = @channel_receiver.queue(self.listener_queue, durable: true, auto_delete: false)
 
 				  	# subscribe to queue
 					  @queue.subscribe(:ack => true) do |metadata, payload|	  	
@@ -110,11 +115,11 @@ module EventHub
 						  	messages_to_send.each do |message|
 						  		send_message(message)
 						  	end
-						  	channel.acknowledge(metadata.delivery_tag)
+						  	@channel_receiver.acknowledge(metadata.delivery_tag)
 						  	@messages_successful += 1
 						  	
 					  	rescue => e
-					  		channel.reject(metadata.delivery_tag,false)
+					  		@channel_receiver.reject(metadata.delivery_tag,false)
 					  		@messages_unsuccessful += 1
 					  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
 								EventHub.logger.save_detailed_error(e)
@@ -126,6 +131,9 @@ module EventHub
 					  # Singnal Listening
 					  Signal.trap("TERM") {stop_processor}
 					  Signal.trap("INT")  {stop_processor}
+
+					  # post_start is a custom post start routing to be overwritten
+						post_start
 
 					  # Various timers
 					  EventMachine.add_timer(@watchdog_cycle_in_s) { watchdog }
@@ -143,6 +151,9 @@ module EventHub
 				end
 
 			end # while
+
+			# post_start is a custom post start routing to be overwritten
+			post_stop
 
 			EventHub.logger.info("Processor [#{@name}] has been stopped")
 		ensure
@@ -192,7 +203,8 @@ module EventHub
 
 			now = Time.now
 			message.body = {
-				 heartbeat: {
+				 version: 							self.version,
+				 heartbeat: {             
 				 started: 							now_stamp(@started),
 				 stamp_last_beat:       now_stamp(now), 
 				 uptime:                duration(now-@started),
@@ -212,15 +224,25 @@ module EventHub
 			send_message(message)
 
 			EventMachine.add_timer(self.heartbeat_cycle_in_s) { heartbeat }
+
 		end
 
 		# send message
 		def send_message(message,exchange_name=EH_X_INBOUND)
-			AMQP::Channel.new(@connection) do |channel|
-				channel.direct(exchange_name, :durable => true, :auto_delete => false) do |exchange, declare_ok|
-      		exchange.publish(message.to_json, :persistent => true)
-      	end
+
+			if @channel_sender.nil? || !@channel_sender.open?
+				@channel_sender = AMQP::Channel.new(@connection, prefetch: 1)
+
+				# use publisher confirm
+				@channel_sender.confirm_select
+				  
+				# @channel.on_error { |ch, channel_close| EventHub.logger.error "Oops! a channel-level exception: #{channel_close.reply_text}" }
+        # @channel.on_ack   { |basic_ack| EventHub.logger.info "Received basic_ack: multiple = #{basic_ack.multiple}, delivery_tag = #{basic_ack.delivery_tag}" }
 			end
+
+			exchange = @channel_sender.direct(exchange_name, :durable => true, :auto_delete => false) 
+   		exchange.publish(message.to_json, :persistent => true)
+
 		rescue => e
 				EventHub.logger.error("Unexpected exception while sending message to [#{exchange_name}]: #{e}")
 		end
@@ -238,6 +260,13 @@ module EventHub
 		def stop_processor(restart=false)
 			@restart = restart
 
+			# close channels
+			[@channel_receiver,@channel_sender].each do |channel|
+				if channel
+					channel.close if channel.open?
+				end
+			end
+
 			# stop connection and event loop
 			if @connection
 				@connection.disconnect if @connection.connected?
@@ -253,6 +282,13 @@ module EventHub
 
 		  # write daemon pid
   		IO.write("#{@folder}/#{@name}.pid",Process.pid.to_s)
+		end
+
+		def post_start
+			# method which can be overwritten to call a code sequence after reactor start
+		end
+
+		def post_stop
 		end
 
 	end
