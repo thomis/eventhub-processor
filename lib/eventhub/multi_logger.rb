@@ -16,10 +16,16 @@ module EventHub
 
   class MultiLogger
 
+    MAX_EXCEPTIONS_FILES = 500
+
     attr_accessor :folder, :devices
 
     def initialize(folder=nil)
-        @folder = folder || (Dir.pwd + '/log')
+        @folder_base = folder || Dir.pwd
+        @folder_base.chomp!('/')
+        @folder            = [@folder_base,'logs'].join('/')
+        @folder_exceptions = [@folder_base,'exceptions'].join('/')
+        
         @devices = []
 
         FileUtils.makedirs(@folder)
@@ -34,9 +40,21 @@ module EventHub
       stamp = "#{time.strftime("%Y%m%d_%H%M%S")}_#{"%03d" % (time.usec/1000)}"
       filename = "#{stamp}.log"
 
-    	FileUtils.makedirs("#{folder}/exceptions")
+    	FileUtils.makedirs(@folder_exceptions)
 
-      File.open("#{@folder}/exceptions/#{filename}","w") do |output|
+      # check max exception log files
+      exception_files = Dir.glob(@folder_exceptions + '/*.log')
+      if exception_files.size > MAX_EXCEPTIONS_FILES
+        exception_files.reverse[MAX_EXCEPTIONS_FILES..-1].each do |file|
+          begin
+            File.delete(file)
+            File.delete(File.dirname(file) + '/' + File.basename(file,".*") + '.msg.raw')
+          rescue
+          end
+        end
+      end
+
+      File.open("#{@folder_exceptions}/#{filename}","w") do |output|
         output.write("#{feedback}\n\n")
         output.write("Exception: #{feedback.class.to_s}\n\n")
         output.write("Call Stack:\n")
@@ -47,7 +65,7 @@ module EventHub
 
       # save message if provided
       if message
-  	    File.open("#{@folder}/exceptions/#{stamp}.msg.raw","wb") do |output|
+  	    File.open("#{@folder_exceptions}/#{stamp}.msg.raw","wb") do |output|
   	    	output.write(message)
   	    end
     	end	

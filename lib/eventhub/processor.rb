@@ -159,7 +159,7 @@ module EventHub
 		ensure
 			# remove pid file
 			begin
-				File.delete("#{@folder}/#{@name}.pid")	
+				File.delete("#{@folder}/pids/#{@name}.pid")	
 			rescue
 				# ignore exceptions here
 			end
@@ -281,7 +281,9 @@ module EventHub
 			Process.daemon
 
 		  # write daemon pid
-  		IO.write("#{@folder}/#{@name}.pid",Process.pid.to_s)
+		  pids_folder = @folder + "/pids"
+		  FileUtils.makedirs(pids_folder)
+  		IO.write("#{pids_folder}/#{@name}.pid",Process.pid.to_s)
 		end
 
 		def post_start
