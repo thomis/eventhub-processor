@@ -242,9 +242,6 @@ module EventHub
 
 			exchange = @channel_sender.direct(exchange_name, :durable => true, :auto_delete => false) 
    		exchange.publish(message.to_json, :persistent => true)
-
-		rescue => e
-				EventHub.logger.error("Unexpected exception while sending message to [#{exchange_name}]: #{e}")
 		end
 
   	def sleep_break( seconds ) # breaks after n seconds or after interrupt
