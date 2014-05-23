@@ -13,11 +13,13 @@ module EventHub
 			@name = name || class_to_array(self.class)[1..-1].join(".")
 			@folder = Dir.pwd
 
+			# Variables used for heartbeat statistics
 			@started = Time.now
-
-			@messages_successful 		= 0
-			@messages_unsuccessful 	= 0
-
+			@messages_successful 					= 0
+			@messages_unsuccessful 				= 0
+			@messages_average_size 				= 0
+			@messages_average_process_time = 0
+			@first_message 								= true
 
 			@channel_receiver = nil
 			@channel_sender		= nil
@@ -94,9 +96,8 @@ module EventHub
 
 				  	# subscribe to queue
 					  @queue.subscribe(:ack => true) do |metadata, payload|	  	
-
-					  	
 					  	begin
+					  		start_stamp = Time.now
 					  		messages_to_send = []
 
 					  		# try to convert to Evenhub message
@@ -116,7 +117,17 @@ module EventHub
 						  		send_message(message)
 						  	end
 						  	@channel_receiver.acknowledge(metadata.delivery_tag)
+
+						  	# collect statistics for the heartbeat
 						  	@messages_successful += 1
+						  	if @first_message
+						  		@messages_average_process_time = Time.now - start_stamp
+						  		@messages_average_size = payload.size
+						  		@first_message = false
+						  	else
+						  		@messages_average_process_time = (@messages_average_process_time + (Time.now - start_stamp))/2.0
+						  		@messages_average_size = (@messages_average_size + payload.size) / 2.0
+						  	end
 						  	
 					  	rescue => e
 					  		@channel_receiver.reject(metadata.delivery_tag,false)
@@ -215,7 +226,9 @@ module EventHub
 				 messages: {
 				 	total: 								@messages_successful+@messages_unsuccessful,
 				 	successful: 					@messages_successful,
-				 	unsuccessful: 				@messages_unsuccessful
+				 	unsuccessful: 				@messages_unsuccessful,
+				 	average_size:         @messages_average_size,
+				 	average_process_time: @messages_average_process_time 
 				 	}
 				}
 			}

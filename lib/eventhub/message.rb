@@ -86,8 +86,8 @@ module EventHub
       self.status_code == STATUS_INITIAL
     end
 
-    def retried?
-      self.status_code == STATUS_RETRIED
+    def retry_pending?
+      self.status_code == STATUS_RETRY_PENDING
     end
 
     def to_json
