@@ -101,8 +101,9 @@ module EventHub
     # copies the message and set's provided status code (default: success), actual stamp, and a new message id
     def copy(status_code=STATUS_SUCCESS)
       
-      copied_header = self.header.dup 
-      copied_body   = self.body.dup
+      # use Marshal dump and load to make a deep object copy
+      copied_header = Marshal.load( Marshal.dump(header)) 
+      copied_body   = Marshal.load( Marshal.dump(body))
 
       copied_header.set("message_id",UUIDTools::UUID.timestamp_create.to_s)
       copied_header.set("created_at",now_stamp)
