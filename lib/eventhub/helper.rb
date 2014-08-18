@@ -8,7 +8,7 @@ module EventHub
 		end
 
 		# replaces CR, LF, CRLF with ";" and cut's string to requied length by adding "..." if string would be longer
-		def format_string(message,max_characters=80) 
+		def format_string(message,max_characters=80)
 		  max_characters = 5 if max_characters < 5
 		  m = message.gsub(/\r\n|\n|\r/m,";")
 		  return (m[0..max_characters-4] + "...") if m.size > max_characters
@@ -47,9 +47,9 @@ module EventHub
 			result << "#{secs} second" if secs == 1
 			result << "#{milliseconds} milliseconds" if milliseconds > 1
 			result << "#{milliseconds} millisecond" if milliseconds == 1
-			return result.join(' ') 
+			return result.join(' ')
     end
 
-	end	
+	end
 
 end

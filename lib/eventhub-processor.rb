@@ -13,8 +13,12 @@ require_relative 'eventhub/multi_logger'
 
 require_relative 'eventhub/configuration'
 require_relative 'eventhub/hash_extensions'
+require_relative 'eventhub/statistics'
+require_relative 'eventhub/heartbeat'
+require_relative 'eventhub/pidfile'
 require_relative 'eventhub/processor'
 require_relative 'eventhub/message'
+
 
 module EventHub
   def self.logger

@@ -1,7 +1,8 @@
+
+
 module EventHub
 	class Processor
-
-		attr_accessor :name, :folder
+		attr_reader :statistics, :name, :pidfile
 
 		include Helper
 
@@ -11,15 +12,9 @@ module EventHub
 
 		def initialize(name=nil)
 			@name = name || class_to_array(self.class)[1..-1].join(".")
-			@folder = Dir.pwd
-
-			# Variables used for heartbeat statistics
-			@started = Time.now
-			@messages_successful 					= 0
-			@messages_unsuccessful 				= 0
-			@messages_average_size 				= 0
-			@messages_average_process_time = 0
-			@first_message 								= true
+			@pidfile = EventHub::Pidfile.new(File.join(Dir.pwd, 'pids', "#{name}.pid"))
+			@statistics = EventHub::Statistics.new
+			@hearbeat = EventHub::Heartbeat.new(self)
 
 			@channel_receiver = nil
 			@channel_sender		= nil
@@ -73,7 +68,10 @@ module EventHub
 		def start(detached=false)
 			daemonize if detached
 
-			EventHub.logger.info("Processor [#{@name}] base folder [#{@folder}]")
+			EventHub.logger.info("Processor [#{@name}] base folder [#{Dir.pwd}]")
+
+			Signal.trap("TERM") { stop_processor }
+		  Signal.trap("INT")  { stop_processor }
 
 			while @restart
 
@@ -82,11 +80,7 @@ module EventHub
 
 						@connection = connection
 
-						# deal with tcp connection issues
-						@connection.on_tcp_connection_loss do |conn, settings|
-				  		EventHub.logger.warn("Processor lost tcp connection. Trying to restart in #{self.restart_in_s} seconds...")
-				  		stop_processor(true)
-				  	end
+						handle_connection_loss
 
 						# create channel
 						@channel_receiver = AMQP::Channel.new(@connection, prefetch: 1)
@@ -96,66 +90,17 @@ module EventHub
 
 				  	# subscribe to queue
 					  @queue.subscribe(:ack => true) do |metadata, payload|
-					  	begin
-					  		start_stamp = Time.now
-					  		messages_to_send = []
-
-					  		# try to convert to Eventhub message
-					  		message = Message.from_json(payload)
-					  		EventHub.logger.info("-> #{message.to_s}")
-					  		append_to_trail(message)
-
-					  		if message.status_code == STATUS_INVALID
-					  			messages_to_send << message
-					  			EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EH_X_INBOUND}].")
-					  		else
-						  		# pass received message to handler or dervied handler
-						  		messages_to_send = Array(handle_message(message))
-						  	end
-
-					  		# forward invalid or returned messages to dispatcher
-						  	messages_to_send.each do |message|
-						  		send_message(message)
-						  	end
-						  	@channel_receiver.acknowledge(metadata.delivery_tag)
-
-						  	# collect statistics for the heartbeat
-						  	@messages_successful += 1
-						  	if @first_message
-						  		@messages_average_process_time = Time.now - start_stamp
-						  		@messages_average_size = payload.size
-						  		@first_message = false
-						  	else
-						  		@messages_average_process_time = (@messages_average_process_time + (Time.now - start_stamp))/2.0
-						  		@messages_average_size = (@messages_average_size + payload.size) / 2.0
-						  	end
-
-					  	rescue => e
-					  		@channel_receiver.reject(metadata.delivery_tag,false)
-					  		@messages_unsuccessful += 1
-					  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
-								EventHub.logger.save_detailed_error(e)
-					  	end
+					  	handle_message_internal(metadata, payload)
 					  end
 
 					  EventHub.logger.info("Processor [#{@name}] is listening to vhost [#{self.server_vhost}], queue [#{self.listener_queue}]")
 
-					  # Singnal Listening
-					  Signal.trap("TERM") {stop_processor}
-					  Signal.trap("INT")  {stop_processor}
-
 					  # post_start is a custom post start routing to be overwritten
 						post_start
 
-					  # Various timers
-					  EventMachine.add_timer(@watchdog_cycle_in_s) { watchdog }
-
-					  heartbeat
+						register_timers
 					end
 				rescue => e
-					Signal.trap("TERM") { stop_processor }
-					Signal.trap("INT")  { stop_processor }
-
 					id = EventHub.logger.save_detailed_error(e)
 					EventHub.logger.error("Unexpected exception: #{e}, see => #{id}. Trying to restart in #{self.restart_in_s} seconds...")
 
@@ -169,12 +114,7 @@ module EventHub
 
 			EventHub.logger.info("Processor [#{@name}] has been stopped")
 		ensure
-			# remove pid file
-			begin
-				File.delete("#{@folder}/pids/#{@name}.pid")
-			rescue
-				# ignore exceptions here
-			end
+			pidfile.delete
 		end
 
 		def handle_message(metadata,payload)
@@ -205,44 +145,8 @@ module EventHub
 			end
 		end
 
-		def heartbeat
-			message = Message.new
-			message.origin_module_id 	= @name
-			message.origin_type 			= "processor"
-			message.origin_site_id 		= 'global'
-
-			message.process_name    	= 'event_hub.heartbeat'
-
-			now = Time.now
-			message.body = {
-				 version: 							self.version,
-				 heartbeat: {
-				 started: 							now_stamp(@started),
-				 stamp_last_beat:       now_stamp(now),
-				 uptime:                duration(now-@started),
-				 heartbeat_cycle_in_s: 	self.heartbeat_cycle_in_s,
-				 served_queues: 				[self.listener_queue],
-				 host: 									get_host,
-				 ip_adresses:           get_ip_adresses,
-				 messages: {
-				 	total: 								@messages_successful+@messages_unsuccessful,
-				 	successful: 					@messages_successful,
-				 	unsuccessful: 				@messages_unsuccessful,
-				 	average_size:         @messages_average_size,
-				 	average_process_time: @messages_average_process_time
-				 	}
-				}
-			}
-
-			# send heartbeat message
-			send_message(message)
-
-			EventMachine.add_timer(self.heartbeat_cycle_in_s) { heartbeat }
-
-		end
-
 		# send message
-		def send_message(message,exchange_name=EH_X_INBOUND)
+		def send_message(message, exchange_name = EH_X_INBOUND)
 
 			if @channel_sender.nil? || !@channel_sender.open?
 				@channel_sender = AMQP::Channel.new(@connection, prefetch: 1)
@@ -268,12 +172,64 @@ module EventHub
 
 		private
 
+		def handle_connection_loss
+			@connection.on_tcp_connection_loss do |conn, settings|
+	  		EventHub.logger.warn("Processor lost tcp connection. Trying to restart in #{self.restart_in_s} seconds...")
+	  		stop_processor(true)
+	  	end
+		end
+
+		def register_timers
+		  EventMachine.add_timer(@watchdog_cycle_in_s) { watchdog }
+		  EventMachine.add_periodic_timer(@heartbeat_cycle_in_s) do
+		  	message = heartbeat.build_message
+		  	send_message(message)
+		  end
+		end
+
 
 		def append_to_trail(message)
 			unless message.header.get('trail')
 				message.header.set('trail', [])
 			end
 			message.header.get('trail') << self.name
+		end
+
+		def handle_message_internal(metadata, payload)
+			begin
+	  		start_stamp = Time.now
+	  		messages_to_send = []
+
+	  		# try to convert to EventHub message
+	  		message = Message.from_json(payload)
+	  		EventHub.logger.info("-> #{message.to_s}")
+
+	  		append_to_trail(message)
+
+	  		if message.invalid?
+	  			messages_to_send << message
+	  			EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EH_X_INBOUND}].")
+	  		else
+		  		# pass received message to handler or dervied handler
+		  		response = handle_message(message)
+		  		messages_to_send = Array(response)
+		  	end
+
+	  		# forward invalid or returned messages to dispatcher
+		  	messages_to_send.each do |message|
+		  		send_message(message)
+		  	end
+		  	@channel_receiver.acknowledge(metadata.delivery_tag)
+
+		  	# collect statistics for the heartbeat
+		  	self.statistics.success(Time.now - start_stamp, payload.size)
+
+	  	rescue => e
+	  		@channel_receiver.reject(metadata.delivery_tag, false)
+	  		self.statistics.failure
+	  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
+				EventHub.logger.save_detailed_error(e)
+	  	end
 		end
 
 		def stop_processor(restart=false)
@@ -299,10 +255,7 @@ module EventHub
 			# daemonize
 			Process.daemon
 
-		  # write daemon pid
-		  pids_folder = @folder + "/pids"
-		  FileUtils.makedirs(pids_folder)
-  		IO.write("#{pids_folder}/#{@name}.pid",Process.pid.to_s)
+			pidfile.write(Process.pid.to_s)
 		end
 
 		def post_start
@@ -310,6 +263,7 @@ module EventHub
 		end
 
 		def post_stop
+			# method which can be overwritten to call a code sequence after reactor stop
 		end
 
 	end

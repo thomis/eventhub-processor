@@ -90,6 +90,10 @@ module EventHub
       self.status_code == STATUS_RETRY_PENDING
     end
 
+    def invalid?
+      self.status_code == STATUS_INVALID
+    end
+
     def to_json
       {'header' => self.header, 'body' => self.body}.to_json
     end
@@ -100,9 +104,9 @@ module EventHub
 
     # copies the message and set's provided status code (default: success), actual stamp, and a new message id
     def copy(status_code=STATUS_SUCCESS)
-      
+
       # use Marshal dump and load to make a deep object copy
-      copied_header = Marshal.load( Marshal.dump(header)) 
+      copied_header = Marshal.load( Marshal.dump(header))
       copied_body   = Marshal.load( Marshal.dump(body))
 
       copied_header.set("message_id",UUIDTools::UUID.timestamp_create.to_s)
@@ -110,7 +114,7 @@ module EventHub
       copied_header.set("status.code",status_code)
 
       Message.new(copied_header, copied_body)
-    end  
+    end
 
   end
 
