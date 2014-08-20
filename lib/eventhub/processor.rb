@@ -103,7 +103,7 @@ module EventHub
 					  		# try to convert to Eventhub message
 					  		message = Message.from_json(payload)
 					  		EventHub.logger.info("-> #{message.to_s}")
-					  		append_to_trail(message)
+					  		append_to_execution_history(message)
 
 					  		if message.status_code == STATUS_INVALID
 					  			messages_to_send << message
@@ -269,11 +269,11 @@ module EventHub
 		private
 
 
-		def append_to_trail(message)
-			unless message.header.get('trail')
+		def append_to_execution_history(message)
+			unless message.header.get('execution_history')
 				message.header.set('trail', [])
 			end
-			message.header.get('trail') << self.name
+			message.header.get('trail') << {'processor' => self.name, 'timestamp' => now_stamp}
 		end
 
 		def stop_processor(restart=false)
