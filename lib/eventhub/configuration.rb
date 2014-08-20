@@ -5,16 +5,17 @@ module EventHub
     include Helper
 
 		attr_accessor :data, :folder, :environment
-  	
+
   	def initialize
     	@data = nil
+      # TODO: is @folder required? Can we remove it?
       @folder = Dir.pwd
       @environment = 'development'
   	end
 
-  	def load_file(input, env='development')
-    	tmp = JSON.parse( IO.read(input))
-  		@data = tmp[env]
+  	def load_file(input, env = 'development')
+    	json = JSON.parse(IO.read(input))
+  		@data = json[env]
       @environment = env
       true
     rescue => e

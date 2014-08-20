@@ -1,5 +1,3 @@
-
-
 module EventHub
 	class Processor
 		attr_reader :statistics, :name, :pidfile
@@ -65,7 +63,7 @@ module EventHub
 			configuration.get('processor.heartbeat_cycle_in_s') || 300
 		end
 
-		def start(detached=false)
+		def start(detached = false)
 			daemonize if detached
 
 			EventHub.logger.info("Processor [#{@name}] base folder [#{Dir.pwd}]")
@@ -74,7 +72,6 @@ module EventHub
 		  Signal.trap("INT")  { stop_processor }
 
 			while @restart
-
 				begin
 					AMQP.start(self.connection_settings) do |connection, open_ok|
 
@@ -117,7 +114,7 @@ module EventHub
 			pidfile.delete
 		end
 
-		def handle_message(metadata,payload)
+		def handle_message(metadata, payload)
 			raise "Please implement method in derived class"
 		end
 
@@ -162,7 +159,7 @@ module EventHub
    		exchange.publish(message.to_json, :persistent => true)
 		end
 
-  	def sleep_break( seconds ) # breaks after n seconds or after interrupt
+  	def sleep_break(seconds) # breaks after n seconds or after interrupt
   		while (seconds > 0)
     		sleep(1)
     		seconds -= 1
@@ -211,7 +208,7 @@ module EventHub
 	  			EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EH_X_INBOUND}].")
 	  		else
 		  		# pass received message to handler or dervied handler
-		  		response = handle_message(message)
+		  		response = handle_message(metadata, message)
 		  		messages_to_send = Array(response)
 		  	end
 
