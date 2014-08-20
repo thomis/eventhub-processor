@@ -19,8 +19,8 @@ require_relative 'eventhub/message'
 module EventHub
   def self.logger
   	unless @logger
-  		a = Logger.new(STDOUT)
-  		@logger = MultiLogger.new(a)
+  		@logger = MultiLogger.new
+      @logger.add_device(Logger.new(STDOUT))
   	end
   	@logger
   end
