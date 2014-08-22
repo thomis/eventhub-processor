@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe EventHub::MessageProcessor do
-  #let(:processor) { double(:processor)}
+
   let(:message_processor) {
     processor = double(:processor)
     allow(processor).to receive(:name).and_return('a.processor', 'b.processor')
@@ -36,29 +36,5 @@ describe EventHub::MessageProcessor do
     expect(message.header.get('execution_path')[0]).to eq({'processor' => 'a.processor', 'timestamp' => 'a.stamp'})
     expect(message.header.get('execution_path')[1]).to eq({'processor' => 'b.processor', 'timestamp' => 'b.stamp'})
   end
-
-  # before(:each) do
-  #   EventHub::Configuration.instance.data = {}
-
-  # end
-
-  # let(:processor) { EventHub::Processor.new }
-
-  # it 'does something' do
-  #   metadata = double(:metadata, :delivery_tag => 'abcde')
-  #   payload = "{}"
-  #   queue = double(:queue)
-  #   queue.stub(:subscribe).and_yield(metadata, payload)
-  #   channel = double(:channel, :queue => queue, :acknowledge => true)
-  #   processor.stub(:register_timers)
-  #   processor.stub(:handle_connection_loss)
-  #   processor.stub(:handle_message)
-  #   AMQP.stub(:start).and_yield(nil, nil)
-  #   AMQP::Channel.stub(:new).and_return(channel)
-
-  #   processor.start
-  # end
-
-
 
 end
