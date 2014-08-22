@@ -8,6 +8,18 @@ class EventHub::Statistics
     @messages_average_process_time = 0
   end
 
+
+  def measure(size, &block)
+    begin
+      start = Time.now
+      yield
+      success(Time.now - start, size)
+    rescue
+      failure
+      raise
+    end
+  end
+
   def success(process_time, size)
     @messages_average_process_time = (messages_total_process_time + process_time) / (messages_successful + 1).to_f
     @messages_average_size = (messages_total_size + size) / (messages_successful + 1).to_f

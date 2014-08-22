@@ -13,6 +13,7 @@ module EventHub
 			@pidfile = EventHub::Pidfile.new(File.join(Dir.pwd, 'pids', "#{name}.pid"))
 			@statistics = EventHub::Statistics.new
 			@hearbeat = EventHub::Heartbeat.new(self)
+			@message_processor = EventHub::MessageProcessor.new(self)
 
 			@channel_receiver = nil
 			@channel_sender		= nil
@@ -73,40 +74,13 @@ module EventHub
 
 			while @restart
 				begin
-					AMQP.start(self.connection_settings) do |connection, open_ok|
-
-						@connection = connection
-
-						handle_connection_loss
-
-						# create channel
-						@channel_receiver = AMQP::Channel.new(@connection, prefetch: 1)
-
-				  	# connect to queue
-				  	@queue = @channel_receiver.queue(self.listener_queue, durable: true, auto_delete: false)
-
-				  	# subscribe to queue
-					  @queue.subscribe(:ack => true) do |metadata, payload|
-					  	handle_message_internal(metadata, payload)
-					  end
-
-					  EventHub.logger.info("Processor [#{@name}] is listening to vhost [#{self.server_vhost}], queue [#{self.listener_queue}]")
-
-					  # post_start is a custom post start routing to be overwritten
-						post_start
-
-						register_timers
-					end
+					handle_start_internal
 				rescue => e
 					id = EventHub.logger.save_detailed_error(e)
 					EventHub.logger.error("Unexpected exception: #{e}, see => #{id}. Trying to restart in #{self.restart_in_s} seconds...")
-
 					sleep_break self.restart_in_s
 				end
-
 			end # while
-
-			# post_start is a custom post start routing to be overwritten
 			post_stop
 
 			EventHub.logger.info("Processor [#{@name}] has been stopped")
@@ -169,6 +143,47 @@ module EventHub
 
 		private
 
+		def handle_start_internal
+			AMQP.start(self.connection_settings) do |connection, open_ok|
+				@connection = connection
+
+				handle_connection_loss
+
+				# create channel
+				@channel_receiver = AMQP::Channel.new(@connection, prefetch: 1)
+
+		  	# connect to queue
+		  	@queue = @channel_receiver.queue(self.listener_queue, durable: true, auto_delete: false)
+
+		  	# subscribe to queue
+			  @queue.subscribe(:ack => true) do |metadata, payload|
+			  	begin
+			  		statistics.measure(payload.size) do
+				  		messages_to_send = @message_processor.process(metadata, payload)
+
+				  		# forward invalid or returned messages to dispatcher
+					    messages_to_send.each do |message|
+					      processor.send_message(message)
+					    end if messages_to_send
+
+	    				@channel_receiver.acknowledge(metadata.delivery_tag)
+	    			end
+			  	rescue => e
+			  		@channel_receiver.reject(metadata.delivery_tag, false)
+			  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
+						EventHub.logger.save_detailed_error(e)
+			  	end
+			  end
+
+			  EventHub.logger.info("Processor [#{@name}] is listening to vhost [#{self.server_vhost}], queue [#{self.listener_queue}]")
+
+			  # post_start is a custom post start routing to be overwritten
+				post_start
+
+				register_timers
+			end
+		end
+
 		def handle_connection_loss
 			@connection.on_tcp_connection_loss do |conn, settings|
 	  		EventHub.logger.warn("Processor lost tcp connection. Trying to restart in #{self.restart_in_s} seconds...")
@@ -182,51 +197,6 @@ module EventHub
 		  	message = heartbeat.build_message
 		  	send_message(message)
 		  end
-		end
-
-
-		def append_to_trail(message)
-			unless message.header.get('trail')
-				message.header.set('trail', [])
-			end
-			message.header.get('trail') << self.name
-		end
-
-		def handle_message_internal(metadata, payload)
-			begin
-	  		start_stamp = Time.now
-	  		messages_to_send = []
-
-	  		# try to convert to EventHub message
-	  		message = Message.from_json(payload)
-	  		EventHub.logger.info("-> #{message.to_s}")
-
-	  		append_to_trail(message)
-
-	  		if message.invalid?
-	  			messages_to_send << message
-	  			EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EH_X_INBOUND}].")
-	  		else
-		  		# pass received message to handler or dervied handler
-		  		response = handle_message(metadata, message)
-		  		messages_to_send = Array(response)
-		  	end
-
-	  		# forward invalid or returned messages to dispatcher
-		  	messages_to_send.each do |message|
-		  		send_message(message)
-		  	end
-		  	@channel_receiver.acknowledge(metadata.delivery_tag)
-
-		  	# collect statistics for the heartbeat
-		  	self.statistics.success(Time.now - start_stamp, payload.size)
-
-	  	rescue => e
-	  		@channel_receiver.reject(metadata.delivery_tag, false)
-	  		self.statistics.failure
-	  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
-				EventHub.logger.save_detailed_error(e)
-	  	end
 		end
 
 		def stop_processor(restart=false)

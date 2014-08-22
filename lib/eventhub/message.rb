@@ -43,29 +43,28 @@ module EventHub
       Message.new({ "status" =>  { "code" => STATUS_INVALID, "message" => "JSON parse error: #{e}" }} ,{ "original_message_base64_encoded" => Base64.encode64(raw)},raw)
     end
 
-    # process_step_position should be
-    def initialize(header=nil, body=nil,raw=nil)
+    def initialize(header = nil, body = nil, raw = nil)
 
       @header = header || {}
       @body   = body || {}
       @raw    = raw
 
       # set message defaults, that we have required headers
-      @header.set('message_id',UUIDTools::UUID.timestamp_create.to_s,false)
-      @header.set('version',VERSION,false)
-      @header.set('created_at',now_stamp,false)
+      @header.set('message_id', UUIDTools::UUID.timestamp_create.to_s, false)
+      @header.set('version', VERSION, false)
+      @header.set('created_at', now_stamp, false)
 
-      @header.set('origin.module_id','undefined',false)
-      @header.set('origin.type','undefined',false)
-      @header.set('origin.site_id','undefined',false)
+      @header.set('origin.module_id', 'undefined', false)
+      @header.set('origin.type', 'undefined', false)
+      @header.set('origin.site_id', 'undefined', false)
 
-      @header.set('process.name','undefined',false)
-      @header.set('process.execution_id',UUIDTools::UUID.timestamp_create.to_s,false)
-      @header.set('process.step_position',0,false)
+      @header.set('process.name', 'undefined', false)
+      @header.set('process.execution_id', UUIDTools::UUID.timestamp_create.to_s, false)
+      @header.set('process.step_position', 0, false)
 
-      @header.set('status.retried_count',0,false)
-      @header.set('status.code',STATUS_INITIAL,false)
-      @header.set('status.message','',false)
+      @header.set('status.retried_count', 0, false)
+      @header.set('status.code', STATUS_INITIAL, false)
+      @header.set('status.message', '', false)
 
     end
 
@@ -103,7 +102,7 @@ module EventHub
     end
 
     # copies the message and set's provided status code (default: success), actual stamp, and a new message id
-    def copy(status_code=STATUS_SUCCESS)
+    def copy(status_code = STATUS_SUCCESS)
 
       # use Marshal dump and load to make a deep object copy
       copied_header = Marshal.load( Marshal.dump(header))

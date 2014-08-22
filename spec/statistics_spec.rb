@@ -37,4 +37,25 @@ describe EventHub::Statistics do
     expect(statistics.messages_average_process_time).to eq(55 / 3.0)
   end
 
+  it 'reraises exceptions' do
+    end
+
+  it 'measures success' do
+    statistics.measure(10) do
+      # nothing here
+    end
+    expect(statistics.messages_average_size).to eq(10.0)
+    expect(statistics.messages_successful).to eq(1)
+  end
+
+  it 'measures failure' do
+    begin
+      statistics.measure(10) do
+        raise "increment failure, please"
+      end
+    rescue
+      # ignore
+    end
+    expect(statistics.messages_unsuccessful).to eq(1)
+  end
 end

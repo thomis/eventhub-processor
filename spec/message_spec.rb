@@ -37,7 +37,7 @@ describe EventHub::Message do
 			end
 
 			json = {'header' => header, 'body' => body}.to_json
-			
+
 			# build message from string
 			m = EventHub::Message.from_json(json)
 
@@ -47,7 +47,7 @@ describe EventHub::Message do
 			EventHub::Message::REQUIRED_HEADERS.each do |key|
 				header.get(key).should == "1"
 			end
-				
+
 		end
 
 		it "should initialize to INVALID from an invalid json string" do

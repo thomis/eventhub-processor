@@ -6,6 +6,10 @@ require 'uuidtools'
 require 'base64'
 require 'socket'
 
+begin
+  require 'pry'
+rescue
+end
 require_relative 'eventhub/version'
 require_relative 'eventhub/constant'
 require_relative 'eventhub/helper'
@@ -17,6 +21,7 @@ require_relative 'eventhub/statistics'
 require_relative 'eventhub/heartbeat'
 require_relative 'eventhub/pidfile'
 require_relative 'eventhub/processor'
+require_relative 'eventhub/message_processor'
 require_relative 'eventhub/message'
 
 
