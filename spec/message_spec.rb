@@ -94,4 +94,15 @@ describe EventHub::Message do
 		end
 	end
 
+	context "translate status code" do
+		it "should translate status code to meaningful string" do
+			EventHub::Message.translate_status_code(EventHub::STATUS_INITIAL).should 				== 'STATUS_INITIAL'
+			EventHub::Message.translate_status_code(EventHub::STATUS_SUCCESS).should 				== 'STATUS_SUCCESS'
+			EventHub::Message.translate_status_code(EventHub::STATUS_RETRY).should 					== 'STATUS_RETRY'
+			EventHub::Message.translate_status_code(EventHub::STATUS_RETRY_PENDING).should 	== 'STATUS_RETRY_PENDING'
+			EventHub::Message.translate_status_code(EventHub::STATUS_INVALID).should 				== 'STATUS_INVALID'
+			EventHub::Message.translate_status_code(EventHub::STATUS_DEADLETTER).should 		== 'STATUS_DEADLETTER'
+		end
+	end
+
 end
