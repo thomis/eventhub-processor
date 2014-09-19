@@ -112,6 +112,17 @@ module EventHub
       Message.new(copied_header, copied_body)
     end  
 
+    def self.translate_status_code(code)
+      case code
+        when EventHub::STATUS_INITIAL       then return 'STATUS_INITIAL'
+        when EventHub::STATUS_SUCCESS       then return 'STATUS_SUCCESS'
+        when EventHub::STATUS_RETRY         then return 'STATUS_RETRY'
+        when EventHub::STATUS_RETRY_PENDING then return 'STATUS_RETRY_PENDING'
+        when EventHub::STATUS_INVALID       then return 'STATUS_INVALID'
+        when EventHub::STATUS_DEADLETTER    then return 'STATUS_DEADLETTER'
+      end
+    end
+
   end
 
 end
