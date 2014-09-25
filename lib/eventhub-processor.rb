@@ -6,6 +6,7 @@ require 'uuidtools'
 require 'base64'
 require 'socket'
 
+require_relative 'eventhub/argument_parser'
 require_relative 'eventhub/version'
 require_relative 'eventhub/constant'
 require_relative 'eventhub/helper'
