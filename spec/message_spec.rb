@@ -15,14 +15,14 @@ describe EventHub::Message do
 	context "initialization" do
 
 		it "should have a valid header (structure and data)" do
-			@m.valid?.should be_true
+			@m.valid?.should eq(true)
 		end
 
 		it "should be invalid if one or more values are nil" do
 			EventHub::Message::REQUIRED_HEADERS.each do |key|
 				m = @m.dup
 				m.header.set(key,nil,true)
-				m.valid?.should be_false
+				m.valid?.should eq(false)
 			end
 		end
 
@@ -37,24 +37,24 @@ describe EventHub::Message do
 			end
 
 			json = {'header' => header, 'body' => body}.to_json
-			
+
 			# build message from string
 			m = EventHub::Message.from_json(json)
 
 
-			m.valid?.should be_true
+			m.valid?.should eq(true)
 
 			EventHub::Message::REQUIRED_HEADERS.each do |key|
 				header.get(key).should == "1"
 			end
-				
+
 		end
 
 		it "should initialize to INVALID from an invalid json string" do
 			invalid_json_string = "{klasjdkjaskdf"
 
 			m = EventHub::Message.from_json(invalid_json_string)
-			m.valid?.should be_true
+			m.valid?.should eq(true)
 
 			m.status_code.should == EventHub::STATUS_INVALID
 			m.status_message.should match(/^JSON parse error/)
@@ -68,7 +68,7 @@ describe EventHub::Message do
 		it "should copy the message with status success" do
 			copied_message = @m.copy
 
-			copied_message.valid?.should be_true
+			copied_message.valid?.should eq(true)
 			copied_message.message_id.should_not == @m.message_id
 			copied_message.created_at.should_not == @m.created_at
 			copied_message.status_code.should    == EventHub::STATUS_SUCCESS
@@ -82,7 +82,7 @@ describe EventHub::Message do
 		it "should copy the message with status invalid" do
 			copied_message = @m.copy(EventHub::STATUS_INVALID)
 
-			copied_message.valid?.should be_true
+			copied_message.valid?.should eq(true)
 			copied_message.message_id.should_not == @m.message_id
 			copied_message.created_at.should_not == @m.created_at
 			copied_message.status_code.should    == EventHub::STATUS_INVALID
