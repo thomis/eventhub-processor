@@ -5,6 +5,8 @@ require 'singleton'
 require 'uuidtools'
 require 'base64'
 require 'socket'
+require 'ostruct'
+require 'optparse'
 
 require_relative 'eventhub/argument_parser'
 require_relative 'eventhub/version'
