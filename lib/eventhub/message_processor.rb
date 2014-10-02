@@ -12,7 +12,7 @@ class EventHub::MessageProcessor
     message = EventHub::Message.from_json(payload)
     EventHub.logger.info("-> #{message.to_s}")
 
-    append_to_trail(message)
+    append_to_execution_history(message)
 
     if message.invalid?
       messages_to_send << message
@@ -28,10 +28,10 @@ class EventHub::MessageProcessor
 
   private
 
-  def append_to_trail(message)
-    unless message.header.get('execution_path')
-      message.header.set('execution_path', [])
+  def append_to_execution_history(message)
+    unless message.header.get('execution_history')
+      message.header.set('execution_history', [])
     end
-    message.header.get('execution_path') << {'processor' => self.processor.name, 'timestamp' => processor.now_stamp}
+    message.header.get('execution_history') << {'processor' => self.processor.name, 'timestamp' => processor.now_stamp}
   end
 end

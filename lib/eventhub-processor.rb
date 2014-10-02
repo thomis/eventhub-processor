@@ -5,11 +5,15 @@ require 'singleton'
 require 'uuidtools'
 require 'base64'
 require 'socket'
+require 'ostruct'
+require 'optparse'
 
 begin
   require 'pry'
 rescue
 end
+
+require_relative 'eventhub/argument_parser'
 require_relative 'eventhub/version'
 require_relative 'eventhub/constant'
 require_relative 'eventhub/helper'
