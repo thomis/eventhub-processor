@@ -38,7 +38,7 @@ describe EventHub::Statistics do
   end
 
   it 'reraises exceptions' do
-    end
+  end
 
   it 'measures success' do
     statistics.measure(10) do
