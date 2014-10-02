@@ -77,11 +77,11 @@ module EventHub
 
 			while @restart
 
-				begin 
+				begin
 					AMQP.start(self.connection_settings) do |connection, open_ok|
 
 						@connection = connection
-						
+
 						# deal with tcp connection issues
 						@connection.on_tcp_connection_loss do |conn, settings|
 				  		EventHub.logger.warn("Processor lost tcp connection. Trying to restart in #{self.restart_in_s} seconds...")
@@ -95,14 +95,15 @@ module EventHub
 				  	@queue = @channel_receiver.queue(self.listener_queue, durable: true, auto_delete: false)
 
 				  	# subscribe to queue
-					  @queue.subscribe(:ack => true) do |metadata, payload|	  	
+					  @queue.subscribe(:ack => true) do |metadata, payload|
 					  	begin
 					  		start_stamp = Time.now
 					  		messages_to_send = []
 
-					  		# try to convert to Evenhub message
+					  		# try to convert to Eventhub message
 					  		message = Message.from_json(payload)
 					  		EventHub.logger.info("-> #{message.to_s}")
+					  		append_to_execution_history(message)
 
 					  		if message.status_code == STATUS_INVALID
 					  			messages_to_send << message
@@ -128,7 +129,7 @@ module EventHub
 						  		@messages_average_process_time = (@messages_average_process_time + (Time.now - start_stamp))/2.0
 						  		@messages_average_size = (@messages_average_size + payload.size) / 2.0
 						  	end
-						  	
+
 					  	rescue => e
 					  		@channel_receiver.reject(metadata.delivery_tag,false)
 					  		@messages_unsuccessful += 1
@@ -157,7 +158,7 @@ module EventHub
 
 					id = EventHub.logger.save_detailed_error(e)
 					EventHub.logger.error("Unexpected exception: #{e}, see => #{id}. Trying to restart in #{self.restart_in_s} seconds...")
-					
+
 					sleep_break self.restart_in_s
 				end
 
@@ -170,7 +171,7 @@ module EventHub
 		ensure
 			# remove pid file
 			begin
-				File.delete("#{@folder}/pids/#{@name}.pid")	
+				File.delete("#{@folder}/pids/#{@name}.pid")
 			rescue
 				# ignore exceptions here
 			end
@@ -184,7 +185,7 @@ module EventHub
 			begin
 				response = RestClient.get "http://#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{self.listener_queue}/bindings", { :content_type => :json}
   			data = JSON.parse(response.body)
-  	
+
   			if response.code != 200
   				EventHub.logger.warn("Watchdog: Server did not answered properly. Trying to restart in #{self.restart_in_s} seconds...")
   				EventMachine.add_timer(self.restart_in_s) { stop_processor(true) }
@@ -196,8 +197,8 @@ module EventHub
   				# Watchdog is happy :-)
 					# add timer for next check
 					EventMachine.add_timer(self.watchdog_cycle_in_s) { watchdog }
-				end	
-					
+				end
+
 			rescue => e
 				EventHub.logger.error("Watchdog: Unexpected exception: #{e}. Trying to restart in #{self.restart_in_s} seconds...")
 				stop_processor
@@ -215,9 +216,9 @@ module EventHub
 			now = Time.now
 			message.body = {
 				 version: 							self.version,
-				 heartbeat: {             
+				 heartbeat: {
 				 started: 							now_stamp(@started),
-				 stamp_last_beat:       now_stamp(now), 
+				 stamp_last_beat:       now_stamp(now),
 				 uptime:                duration(now-@started),
 				 heartbeat_cycle_in_s: 	self.heartbeat_cycle_in_s,
 				 served_queues: 				[self.listener_queue],
@@ -228,7 +229,7 @@ module EventHub
 				 	successful: 					@messages_successful,
 				 	unsuccessful: 				@messages_unsuccessful,
 				 	average_size:         @messages_average_size,
-				 	average_process_time: @messages_average_process_time 
+				 	average_process_time: @messages_average_process_time
 				 	}
 				}
 			}
@@ -248,12 +249,12 @@ module EventHub
 
 				# use publisher confirm
 				@channel_sender.confirm_select
-				  
+
 				# @channel.on_error { |ch, channel_close| EventHub.logger.error "Oops! a channel-level exception: #{channel_close.reply_text}" }
         # @channel.on_ack   { |basic_ack| EventHub.logger.info "Received basic_ack: multiple = #{basic_ack.multiple}, delivery_tag = #{basic_ack.delivery_tag}" }
 			end
 
-			exchange = @channel_sender.direct(exchange_name, :durable => true, :auto_delete => false) 
+			exchange = @channel_sender.direct(exchange_name, :durable => true, :auto_delete => false)
    		exchange.publish(message.to_json, :persistent => true)
 		end
 
@@ -266,6 +267,14 @@ module EventHub
 		end
 
 		private
+
+
+		def append_to_execution_history(message)
+			unless message.header.get('execution_history')
+				message.header.set('trail', [])
+			end
+			message.header.get('trail') << {'processor' => self.name, 'timestamp' => now_stamp}
+		end
 
 		def stop_processor(restart=false)
 			@restart = restart
@@ -286,7 +295,7 @@ module EventHub
 
 		def daemonize
 			EventHub.logger.info("Processor [#{@name}] is going to start as daemon")
-		
+
 			# daemonize
 			Process.daemon
 
