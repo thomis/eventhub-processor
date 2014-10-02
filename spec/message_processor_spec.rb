@@ -18,23 +18,23 @@ describe EventHub::MessageProcessor do
     expect(message_processor.processor).to have_received(:handle_message)
   end
 
-  it 'adds execution path to header' do
+  it 'adds execution history to header' do
     response = message_processor.process(Object.new, '{}')
     message = response[0]
-    expect(message.header.get('execution_path').size).to eq(1)
-    expect(message.header.get('execution_path')[0]).to eq({'processor' => 'a.processor', 'timestamp' => 'a.stamp'})
+    expect(message.header.get('execution_history').size).to eq(1)
+    expect(message.header.get('execution_history')[0]).to eq({'processor' => 'a.processor', 'timestamp' => 'a.stamp'})
   end
 
-  it 'appends execution path to header' do
+  it 'appends execution history to header' do
     response = message_processor.process(Object.new, '{}')
     message = response[0]
 
     response = message_processor.process(Object.new, message.to_json)
     message = response[0]
 
-    expect(message.header.get('execution_path').size).to eq(2)
-    expect(message.header.get('execution_path')[0]).to eq({'processor' => 'a.processor', 'timestamp' => 'a.stamp'})
-    expect(message.header.get('execution_path')[1]).to eq({'processor' => 'b.processor', 'timestamp' => 'b.stamp'})
+    expect(message.header.get('execution_history').size).to eq(2)
+    expect(message.header.get('execution_history')[0]).to eq({'processor' => 'a.processor', 'timestamp' => 'a.stamp'})
+    expect(message.header.get('execution_history')[1]).to eq({'processor' => 'b.processor', 'timestamp' => 'b.stamp'})
   end
 
 end
