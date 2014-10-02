@@ -12,7 +12,7 @@ module EventHub
 			@name = name || class_to_array(self.class)[1..-1].join(".")
 			@pidfile = EventHub::Pidfile.new(File.join(Dir.pwd, 'pids', "#{name}.pid"))
 			@statistics = EventHub::Statistics.new
-			@hearbeat = EventHub::Heartbeat.new(self)
+			@heartbeat = EventHub::Heartbeat.new(self)
 			@message_processor = EventHub::MessageProcessor.new(self)
 
 			@channel_receiver = nil
@@ -181,6 +181,9 @@ module EventHub
 				post_start
 
 				register_timers
+
+				# send first heartbeat
+				heartbeat
 			end
 		end
 
@@ -192,11 +195,13 @@ module EventHub
 		end
 
 		def register_timers
-		  EventMachine.add_timer(@watchdog_cycle_in_s) { watchdog }
-		  EventMachine.add_periodic_timer(@heartbeat_cycle_in_s) do
-		  	message = heartbeat.build_message
-		  	send_message(message)
-		  end
+		  EventMachine.add_timer(watchdog_cycle_in_s) { watchdog }
+		  EventMachine.add_periodic_timer(heartbeat_cycle_in_s) { heartbeat }
+		end
+
+		def heartbeat
+			message = @heartbeat.build_message
+		  send_message(message)
 		end
 
 		def stop_processor(restart=false)
