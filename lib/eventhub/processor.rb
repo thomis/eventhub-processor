@@ -117,7 +117,7 @@ module EventHub
 		end
 
 		# send message
-		def send_message(message, exchange_name = EH_X_INBOUND)
+		def send_message(message, exchange_name = EventHub::EH_X_INBOUND)
 
 			if @channel_sender.nil? || !@channel_sender.open?
 				@channel_sender = AMQP::Channel.new(@connection, prefetch: 1)
@@ -163,7 +163,7 @@ module EventHub
 
 				  		# forward invalid or returned messages to dispatcher
 					    messages_to_send.each do |message|
-					      processor.send_message(message)
+					      send_message(message)
 					    end if messages_to_send
 
 	    				@channel_receiver.acknowledge(metadata.delivery_tag)
@@ -201,6 +201,7 @@ module EventHub
 
 		def heartbeat
 			message = @heartbeat.build_message
+			message.append_to_execution_history(@name)
 		  send_message(message)
 		end
 
