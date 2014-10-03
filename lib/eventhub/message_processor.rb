@@ -19,7 +19,7 @@ class EventHub::MessageProcessor
       EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EventHub::EH_X_INBOUND}].")
     else
       # pass received message to handler or dervied handler
-      response = processor.handle_message(metadata, message)
+      response = processor.handle_message(message)
       messages_to_send = Array(response)
     end
 

@@ -108,6 +108,8 @@ describe EventHub::Message do
 
 	context "execution history" do
 		it "should have a execution history entry" do
+			EventHub::Message.any_instance.stub(:now_stamp).and_return('a.stamp')
+
 			# no history initially
 			expect(@m.header["execution_history"]).to eq(nil)
 
@@ -118,16 +120,15 @@ describe EventHub::Message do
 
 			expect(execution_history).not_to eq(nil)
 			expect(execution_history.size).to eq(1)
-			expect(execution_history[0]["processor"]).to eq("processor_name")
-			expect(execution_history[0]["timestamp"]).to match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}Z$/)
+			expect(execution_history[0]).to eq("processor" => "processor_name", "timestamp" => "a.stamp")
 
 			# add 2nd entry
+			EventHub::Message.any_instance.stub(:now_stamp).and_return('b.stamp')
 			@m.append_to_execution_history("processor_name2")
 
 			execution_history = @m.header.get("execution_history")
 			expect(execution_history.size).to eq(2)
-			expect(execution_history[1]["processor"]).to eq("processor_name2")
-			expect(execution_history[1]["timestamp"]).to match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}Z$/)
+			expect(execution_history[1]).to eq("processor" => "processor_name2", "timestamp" => "b.stamp")
 		end
 	end
 
