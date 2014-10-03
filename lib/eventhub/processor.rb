@@ -69,8 +69,9 @@ module EventHub
 
 			EventHub.logger.info("Processor [#{@name}] base folder [#{Dir.pwd}]")
 
-			Signal.trap("TERM") { stop_processor }
-		  Signal.trap("INT")  { stop_processor }
+			# use timer here to have last heartbeat message working
+			Signal.trap("TERM") { EventMachine.add_timer(0) { about_to_stop } }
+		  Signal.trap("INT")  { EventMachine.add_timer(0) { about_to_stop } }
 
 			while @restart
 				begin
@@ -199,10 +200,15 @@ module EventHub
 		  EventMachine.add_periodic_timer(heartbeat_cycle_in_s) { heartbeat }
 		end
 
-		def heartbeat
-			message = @heartbeat.build_message
+		def heartbeat(action="running")
+			message = @heartbeat.build_message(action)
 			message.append_to_execution_history(@name)
 		  send_message(message)
+		end
+
+		def about_to_stop
+			heartbeat("stopped")
+			stop_processor
 		end
 
 		def stop_processor(restart=false)
