@@ -10,7 +10,7 @@ class EventHub::Heartbeat
   end
 
 
-  def build_message
+  def build_message(action="running")
     message = ::EventHub::Message.new
     message.origin_module_id  = processor.name
     message.origin_type       = "processor"
@@ -19,8 +19,12 @@ class EventHub::Heartbeat
     message.process_name      = 'event_hub.heartbeat'
 
     now = Time.now
+
+    # message structure needs more changes
     message.body = {
       version: processor.version,
+      action:  action,
+      pid:     Process.pid,
       heartbeat: {
         started:                now_stamp(started_at),
         stamp_last_beat:        now_stamp(now),
