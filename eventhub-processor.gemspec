@@ -22,7 +22,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.3.0", '>= 10.3.0'
   spec.add_development_dependency "rspec", "~> 3.0.0", '>= 3.0.0'
   spec.add_development_dependency "rspec-mocks"
-  spec.add_development_dependency "pry"
 
   spec.add_runtime_dependency "rest-client", "~> 1.7.2", '>= 1.7.2'
   spec.add_runtime_dependency "amqp", "~> 1.5.0", '>= 1.5.0'
