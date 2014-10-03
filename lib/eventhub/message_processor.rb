@@ -12,11 +12,11 @@ class EventHub::MessageProcessor
     message = EventHub::Message.from_json(payload)
     EventHub.logger.info("-> #{message.to_s}")
 
-    append_to_execution_history(message)
+    message.append_to_execution_history(self.processor.name)
 
     if message.invalid?
       messages_to_send << message
-      EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EH_X_INBOUND}].")
+      EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EventHub::EH_X_INBOUND}].")
     else
       # pass received message to handler or dervied handler
       response = processor.handle_message(metadata, message)
@@ -24,14 +24,5 @@ class EventHub::MessageProcessor
     end
 
     messages_to_send
-  end
-
-  private
-
-  def append_to_execution_history(message)
-    unless message.header.get('execution_history')
-      message.header.set('execution_history', [])
-    end
-    message.header.get('execution_history') << {'processor' => self.processor.name, 'timestamp' => processor.now_stamp}
   end
 end

@@ -105,4 +105,30 @@ describe EventHub::Message do
 		end
 	end
 
+
+	context "execution history" do
+		it "should have a execution history entry" do
+			# no history initially
+			expect(@m.header["execution_history"]).to eq(nil)
+
+			# add an entry
+			@m.append_to_execution_history("processor_name")
+
+			execution_history = @m.header.get("execution_history")
+
+			expect(execution_history).not_to eq(nil)
+			expect(execution_history.size).to eq(1)
+			expect(execution_history[0]["processor"]).to eq("processor_name")
+			expect(execution_history[0]["timestamp"]).to match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}Z$/)
+
+			# add 2nd entry
+			@m.append_to_execution_history("processor_name2")
+
+			execution_history = @m.header.get("execution_history")
+			expect(execution_history.size).to eq(2)
+			expect(execution_history[1]["processor"]).to eq("processor_name2")
+			expect(execution_history[1]["timestamp"]).to match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}Z$/)
+		end
+	end
+
 end

@@ -115,6 +115,13 @@ module EventHub
       Message.new(copied_header, copied_body)
     end
 
+    def append_to_execution_history(processor_name)
+      unless header.get('execution_history')
+        header.set('execution_history', [])
+      end
+      header.get('execution_history') << {'processor' => processor_name, 'timestamp' => now_stamp}
+    end
+
     def self.translate_status_code(code)
       case code
         when EventHub::STATUS_INITIAL       then return 'STATUS_INITIAL'
