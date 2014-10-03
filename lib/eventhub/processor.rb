@@ -169,10 +169,16 @@ module EventHub
 
 	    				@channel_receiver.acknowledge(metadata.delivery_tag)
 	    			end
+
+	    		rescue EventHub::NoDeadletterException => e
+			  		@channel_receiver.reject(metadata.delivery_tag, true)
+			  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message will be requeued.")
+						EventHub.logger.save_detailed_error(e)
+						sleep_break self.restart_in_s
 			  	rescue => e
 			  		@channel_receiver.reject(metadata.delivery_tag, false)
 			  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
-						EventHub.logger.save_detailed_error(e)
+						EventHub.logger.save_detailed_error(e,payload)
 			  	end
 			  end
 

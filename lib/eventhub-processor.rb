@@ -23,6 +23,8 @@ require_relative 'eventhub/processor'
 require_relative 'eventhub/message_processor'
 require_relative 'eventhub/message'
 
+require_relative 'eventhub/base_exception'
+require_relative 'eventhub/no_deadletter_exception'
 
 module EventHub
   def self.logger
