@@ -1,5 +1,4 @@
 class EventHub::Heartbeat
-  include ::EventHub::Helper
 
   attr_reader :processor, :statistics, :started_at
 
@@ -10,7 +9,7 @@ class EventHub::Heartbeat
   end
 
 
-  def build_message(action="running")
+  def build_message(action = "running")
     message = ::EventHub::Message.new
     message.origin_module_id  = processor.name
     message.origin_type       = "processor"
@@ -25,14 +24,16 @@ class EventHub::Heartbeat
       version: processor.version,
       action:  action,
       pid:     Process.pid,
+      process_name: 'event_hub.heartbeat',
+
       heartbeat: {
         started:                now_stamp(started_at),
         stamp_last_beat:        now_stamp(now),
         uptime:                 duration(now - started_at),
-        heartbeat_cycle_in_s:   processor.heartbeat_cycle_in_s,
+        heartbeat_cycle_in_ms:  processor.heartbeat_cycle_in_s * 1000,
         served_queues:          [processor.listener_queue],
-        host:                   get_host,
-        ip_adresses:            get_ip_adresses,
+        host:                   Socket.gethostname,
+        ip_addresses:           ip_addresses,
         messages: {
           total:                statistics.messages_total,
           successful:           statistics.messages_successful,
@@ -43,6 +44,28 @@ class EventHub::Heartbeat
       }
     }
     message
+  end
+
+  private
+
+
+  def ip_addresses
+    interfaces = Socket.getifaddrs.select do |interface|
+      !interface.addr.ipv4_loopback? && !interface.addr.ipv6_loopback?
+    end
+
+    interfaces.map do |interface|
+      begin
+        {
+          :interface => interface.name,
+          :host_name => Socket.gethostname,
+          :ip_address => interface.addr.ip_address
+        }
+      rescue
+        nil # will be ignored
+      end
+    end.compact
+
   end
 
 

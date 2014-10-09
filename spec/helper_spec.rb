@@ -47,12 +47,4 @@ describe EventHub::Helper do
 
 	end
 
-
-	context "host" do
-		it "should return a hostname" do
-			expect(get_host).not_to eq(nil)
-			expect(get_host).to eq(Socket.gethostname)
-		end
-	end
-
 end

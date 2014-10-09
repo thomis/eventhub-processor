@@ -13,4 +13,6 @@ describe EventHub::Heartbeat do
     message = heartbeat.build_message
     expect(message.process_name).to eq("event_hub.heartbeat")
   end
+
+
 end

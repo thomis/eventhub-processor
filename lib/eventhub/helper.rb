@@ -15,15 +15,6 @@ module EventHub
 		  return m
 	  end
 
-	  def get_host
-	  	Socket.gethostname
-	  end
-
-	  def get_ip_adresses
-	  	list = Socket.ip_address_list.map { |i| i.ip_address unless i.ipv4_loopback? || i.ipv6_loopback? }.compact
-	  	return list.size == 0 ? ["no ip address found (loopback excluded)"] : list
-	  end
-
 	  def now_stamp(now=nil)
 	  	now ||= Time.now
       now.utc.strftime("%Y-%m-%dT%H:%M:%S.#{now.usec}Z")
