@@ -38,6 +38,19 @@ EventHub::Configuration.instance.load_file(config_file,environment)
 EventHub::PlateStoreRouter.new.start
 ```
 
+
+## Arguments
+
+You can use the default argument parser behaviour (-e, -d, -h) or extend it like:
+
+```
+parsed = EventHub::ArgumentParser.parse(['-x']) do |parser, options|
+  parser.on('-x') do
+    options.x = 'secret switch selected'
+  end
+end
+```
+
 ## Contributing
 
 1. Fork it

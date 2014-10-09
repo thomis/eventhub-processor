@@ -18,4 +18,14 @@ describe EventHub::ArgumentParser do
     expect(parsed.environment).to eq('development')
     expect(parsed.detached).to eq(true)
   end
+
+
+  it 'allows to extend parsing through a block' do
+    parsed = EventHub::ArgumentParser.parse(['-x']) do |parser, options|
+      parser.on('-x') do
+        options.x = 'jada'
+      end
+    end
+    expect(parsed.x).to eq('jada')
+  end
 end

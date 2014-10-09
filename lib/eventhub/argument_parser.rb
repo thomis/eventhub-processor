@@ -1,6 +1,7 @@
 module EventHub
 
   class ArgumentParser
+
     def self.parse(args)
       # The options specified on the command line will be collected in *options*.
       # We set default values here.
@@ -10,6 +11,7 @@ module EventHub
 
       opt_parser = OptionParser.new do |opts|
         opts.banner = "Usage: #{args[0]}.rb [options]"
+        yield(opts, options) if block_given? # allow to add more options
 
         opts.on("-e", "--environment ENVIRONMENT","Environment the processor is running") do |environment|
           options.environment = environment
