@@ -27,6 +27,7 @@ eh generate_processor --help
 for details.
 
 
+### Code
 
 ```Ruby
 # define a class and derive it from Eventhub::Processor
