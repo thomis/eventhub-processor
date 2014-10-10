@@ -19,6 +19,15 @@ Or install it yourself as:
 
 ## Usage
 
+The easiest way to cretae a new processor is to use the _eventhub-command_ gem. Run
+
+```
+eh generate_processor --help
+```
+for details.
+
+
+
 ```Ruby
 # define a class and derive it from Eventhub::Processor
 module EventHub
