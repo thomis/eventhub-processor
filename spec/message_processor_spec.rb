@@ -2,8 +2,6 @@ require 'spec_helper'
 
 describe EventHub::MessageProcessor do
 
-
-
   let(:message_processor) {
     processor = double(:processor)
     allow(processor).to receive(:name).and_return('a.processor', 'b.processor')
@@ -20,7 +18,7 @@ describe EventHub::MessageProcessor do
   end
 
   it 'adds execution history to header' do
-    EventHub::Message.any_instance.stub(:now_stamp).and_return('a.stamp')
+    allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return('a.stamp')
     response = message_processor.process(Object.new, '{}')
     execution_history = response[0].header.get('execution_history')
     expect(execution_history.size).to eq(1)
@@ -28,11 +26,11 @@ describe EventHub::MessageProcessor do
   end
 
   it 'appends execution history to header' do
-    EventHub::Message.any_instance.stub(:now_stamp).and_return('a.stamp')
+    allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return('a.stamp')
     response = message_processor.process(Object.new, '{}')
     message = response[0]
 
-    EventHub::Message.any_instance.stub(:now_stamp).and_return('b.stamp')
+    allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return('b.stamp')
     response = message_processor.process(Object.new, message.to_json)
     execution_history =  response[0].header.get('execution_history')
 

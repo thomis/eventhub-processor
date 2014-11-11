@@ -48,8 +48,12 @@ module EventHub
 			{ user: server_user, password: server_password, host: server_host, vhost: server_vhost }
 		end
 
-		def listener_queue
-			configuration.get('processor.listener_queue') || 'undefined_listener_queue'
+		def listener_queues
+			Array(
+				configuration.get('processor.listener_queue') ||
+				configuration.get('processor.listener_queues') ||
+				'undefined_listener_queues'
+			)
 		end
 
 		def watchdog_cycle_in_s
@@ -76,12 +80,18 @@ module EventHub
 			while @restart
 				begin
 					handle_start_internal
+
+					# custom post start method to be overwritten
+					post_start
+
 				rescue => e
 					id = EventHub.logger.save_detailed_error(e)
 					EventHub.logger.error("Unexpected exception: #{e}, see => #{id}. Trying to restart in #{self.restart_in_s} seconds...")
 					sleep_break self.restart_in_s
 				end
 			end # while
+
+			# custon post stop method to be overwritten
 			post_stop
 
 			EventHub.logger.info("Processor [#{@name}] has been stopped")
@@ -94,26 +104,28 @@ module EventHub
 		end
 
 		def watchdog
-			begin
-				response = RestClient.get "http://#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{self.listener_queue}/bindings", { :content_type => :json}
-  			data = JSON.parse(response.body)
+			self.listener_queues.each do |queue_name|
+				begin
+					response = RestClient.get "http://#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings", { :content_type => :json}
+	  			data = JSON.parse(response.body)
 
-  			if response.code != 200
-  				EventHub.logger.warn("Watchdog: Server did not answered properly. Trying to restart in #{self.restart_in_s} seconds...")
-  				EventMachine.add_timer(self.restart_in_s) { stop_processor(true) }
-  			elsif data.size == 0
-  				EventHub.logger.warn("Watchdog: Something is wrong with the vhost, queue, and/or bindings. Trying to restart in #{self.restart_in_s} seconds...")
-  				EventMachine.add_timer(self.restart_in_s) { stop_processor(true) }
-  				# does it make sence ? Needs maybe more checks in future
-  			else
-  				# Watchdog is happy :-)
-					# add timer for next check
-					EventMachine.add_timer(self.watchdog_cycle_in_s) { watchdog }
+	  			if response.code != 200
+	  				EventHub.logger.warn("Watchdog: Server did not answered properly. Trying to restart in #{self.restart_in_s} seconds...")
+	  				EventMachine.add_timer(self.restart_in_s) { stop_processor(true) }
+	  			elsif data.size == 0
+	  				EventHub.logger.warn("Watchdog: Something is wrong with the vhost, queue [#{queue_name}], and/or bindings. Trying to restart in #{self.restart_in_s} seconds...")
+	  				EventMachine.add_timer(self.restart_in_s) { stop_processor(true) }
+	  				# does it make sence ? Needs maybe more checks in future
+	  			else
+	  				# Watchdog is happy :-)
+						# add timer for next check
+						EventMachine.add_timer(self.watchdog_cycle_in_s) { watchdog }
+					end
+
+				rescue => e
+					EventHub.logger.error("Watchdog: Unexpected exception: #{e}. Trying to restart in #{self.restart_in_s} seconds...")
+					stop_processor
 				end
-
-			rescue => e
-				EventHub.logger.error("Watchdog: Unexpected exception: #{e}. Trying to restart in #{self.restart_in_s} seconds...")
-				stop_processor
 			end
 		end
 
@@ -153,39 +165,40 @@ module EventHub
 				# create channel
 				@channel_receiver = AMQP::Channel.new(@connection, prefetch: 1)
 
-		  	# connect to queue
-		  	@queue = @channel_receiver.queue(self.listener_queue, durable: true, auto_delete: false)
+				self.listener_queues.each do |queue_name|
 
-		  	# subscribe to queue
-			  @queue.subscribe(:ack => true) do |metadata, payload|
-			  	begin
-			  		statistics.measure(payload.size) do
-				  		messages_to_send = @message_processor.process(metadata, payload)
+			  	# connect to queue
+			  	queue = @channel_receiver.queue(queue_name, durable: true, auto_delete: false)
 
-				  		# forward invalid or returned messages to dispatcher
-					    messages_to_send.each do |message|
-					      send_message(message)
-					    end if messages_to_send
+			  	# subscribe to queue
+				  queue.subscribe(:ack => true) do |metadata, payload|
+				  	begin
+				  		statistics.measure(payload.size) do
+					  		messages_to_send = @message_processor.process({ metadata: metadata, queue_name: queue_name}, payload)
 
-	    				@channel_receiver.acknowledge(metadata.delivery_tag)
-	    			end
+					  		# forward invalid or returned messages to dispatcher
+						    messages_to_send.each do |message|
+						      send_message(message)
+						    end if messages_to_send
 
-	    		rescue EventHub::NoDeadletterException => e
-			  		@channel_receiver.reject(metadata.delivery_tag, true)
-			  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message will be requeued.")
-						EventHub.logger.save_detailed_error(e)
-						sleep_break self.restart_in_s
-			  	rescue => e
-			  		@channel_receiver.reject(metadata.delivery_tag, false)
-			  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
-						EventHub.logger.save_detailed_error(e,payload)
-			  	end
-			  end
+		    				@channel_receiver.acknowledge(metadata.delivery_tag)
+		    			end
 
-			  EventHub.logger.info("Processor [#{@name}] is listening to vhost [#{self.server_vhost}], queue [#{self.listener_queue}]")
+		    		rescue EventHub::NoDeadletterException => e
+				  		@channel_receiver.reject(metadata.delivery_tag, true)
+				  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message will be requeued.")
+							EventHub.logger.save_detailed_error(e)
+							sleep_break self.restart_in_s
+				  	rescue => e
+				  		@channel_receiver.reject(metadata.delivery_tag, false)
+				  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
+							EventHub.logger.save_detailed_error(e,payload)
+				  	end
+				  end
 
-			  # post_start is a custom post start routing to be overwritten
-				post_start
+				end
+
+			  EventHub.logger.info("Processor [#{@name}] is listening to vhost [#{self.server_vhost}], queues [#{self.listener_queues.join(", ")}]")
 
 				register_timers
 

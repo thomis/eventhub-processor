@@ -5,7 +5,7 @@ class EventHub::MessageProcessor
     @processor = processor
   end
 
-  def process(metadata, payload)
+  def process(params, payload)
     messages_to_send = []
 
     # try to convert to EventHub message
@@ -19,8 +19,11 @@ class EventHub::MessageProcessor
       EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EventHub::EH_X_INBOUND}].")
     else
       # pass received message to handler or dervied handler
-      response = processor.handle_message(message)
-      messages_to_send = Array(response)
+      if processor.method(:handle_message).arity == 1
+        messages_to_send = Array(processor.handle_message(message))
+      else
+        messages_to_send = Array(processor.handle_message(message,params))
+      end
     end
 
     messages_to_send

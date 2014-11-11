@@ -31,7 +31,7 @@ class EventHub::Heartbeat
         stamp_last_beat:        now_stamp(now),
         uptime:                 duration(now - started_at),
         heartbeat_cycle_in_ms:  processor.heartbeat_cycle_in_s * 1000,
-        served_queues:          [processor.listener_queue],
+        served_queues:          [processor.listener_queues],
         host:                   Socket.gethostname,
         ip_addresses:           ip_addresses,
         messages: {

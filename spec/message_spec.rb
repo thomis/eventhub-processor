@@ -108,7 +108,7 @@ describe EventHub::Message do
 
 	context "execution history" do
 		it "should have a execution history entry" do
-			EventHub::Message.any_instance.stub(:now_stamp).and_return('a.stamp')
+			allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return('a.stamp')
 
 			# no history initially
 			expect(@m.header["execution_history"]).to eq(nil)
@@ -123,7 +123,7 @@ describe EventHub::Message do
 			expect(execution_history[0]).to eq("processor" => "processor_name", "timestamp" => "a.stamp")
 
 			# add 2nd entry
-			EventHub::Message.any_instance.stub(:now_stamp).and_return('b.stamp')
+			allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return('b.stamp')
 			@m.append_to_execution_history("processor_name2")
 
 			execution_history = @m.header.get("execution_history")
