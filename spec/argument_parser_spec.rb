@@ -13,6 +13,12 @@ describe EventHub::ArgumentParser do
     expect(parsed.detached).to eq(false)
   end
 
+  it 'parses envrionment with single character option' do
+      parsed = EventHub::ArgumentParser.parse(['--e=foo'])
+    expect(parsed.environment).to eq('foo')
+    expect(parsed.detached).to eq(false)
+  end
+
   it 'parses detached' do
     parsed = EventHub::ArgumentParser.parse(['-d'])
     expect(parsed.environment).to eq('development')
