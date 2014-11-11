@@ -1,72 +1,75 @@
-class EventHub::Heartbeat
+module EventHub
 
-  attr_reader :processor, :statistics, :started_at
+  class Heartbeat
+    include Helper
 
-  def initialize(processor)
-    @started_at = Time.now
-    @processor = processor
-    @statistics = @processor.statistics
-  end
+    attr_reader :processor, :statistics, :started_at
 
-
-  def build_message(action = "running")
-    message = ::EventHub::Message.new
-    message.origin_module_id  = processor.name
-    message.origin_type       = "processor"
-    message.origin_site_id    = 'global'
-
-    message.process_name      = 'event_hub.heartbeat'
-
-    now = Time.now
-
-    # message structure needs more changes
-    message.body = {
-      version: processor.version,
-      action:  action,
-      pid:     Process.pid,
-      process_name: 'event_hub.heartbeat',
-
-      heartbeat: {
-        started:                now_stamp(started_at),
-        stamp_last_beat:        now_stamp(now),
-        uptime:                 duration(now - started_at),
-        heartbeat_cycle_in_ms:  processor.heartbeat_cycle_in_s * 1000,
-        served_queues:          [processor.listener_queues],
-        host:                   Socket.gethostname,
-        ip_addresses:           ip_addresses,
-        messages: {
-          total:                statistics.messages_total,
-          successful:           statistics.messages_successful,
-          unsuccessful:         statistics.messages_unsuccessful,
-          average_size:         statistics.messages_average_size,
-          average_process_time: statistics.messages_average_process_time
-        }
-      }
-    }
-    message
-  end
-
-  private
-
-
-  def ip_addresses
-    interfaces = Socket.getifaddrs.select do |interface|
-      !interface.addr.ipv4_loopback? && !interface.addr.ipv6_loopback?
+    def initialize(processor)
+      @started_at = Time.now
+      @processor = processor
+      @statistics = @processor.statistics
     end
 
-    interfaces.map do |interface|
-      begin
-        {
-          :interface => interface.name,
-          :host_name => Socket.gethostname,
-          :ip_address => interface.addr.ip_address
+
+    def build_message(action = "running")
+      message = ::EventHub::Message.new
+      message.origin_module_id  = processor.name
+      message.origin_type       = "processor"
+      message.origin_site_id    = 'global'
+
+      message.process_name      = 'event_hub.heartbeat'
+
+      now = Time.now
+
+      # message structure needs more changes
+      message.body = {
+        version: processor.version,
+        action:  action,
+        pid:     Process.pid,
+        process_name: 'event_hub.heartbeat',
+
+        heartbeat: {
+          started:                now_stamp(started_at),
+          stamp_last_beat:        now_stamp(now),
+          uptime:                 duration(now - started_at),
+          heartbeat_cycle_in_ms:  processor.heartbeat_cycle_in_s * 1000,
+          served_queues:          [processor.listener_queues],
+          host:                   Socket.gethostname,
+          ip_addresses:           ip_addresses,
+          messages: {
+            total:                statistics.messages_total,
+            successful:           statistics.messages_successful,
+            unsuccessful:         statistics.messages_unsuccessful,
+            average_size:         statistics.messages_average_size,
+            average_process_time: statistics.messages_average_process_time
+          }
         }
-      rescue
-        nil # will be ignored
+      }
+      message
+    end
+
+    private
+
+    def ip_addresses
+      interfaces = Socket.getifaddrs.select do |interface|
+        !interface.addr.ipv4_loopback? && !interface.addr.ipv6_loopback?
       end
-    end.compact
+
+      interfaces.map do |interface|
+        begin
+          {
+            :interface => interface.name,
+            :host_name => Socket.gethostname,
+            :ip_address => interface.addr.ip_address
+          }
+        rescue
+          nil # will be ignored
+        end
+      end.compact
+
+    end
 
   end
-
 
 end
