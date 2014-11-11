@@ -19,6 +19,16 @@ Or install it yourself as:
 
 ## Usage
 
+The easiest way to cretae a new processor is to use the _eventhub-command_ gem. Run
+
+```
+eh generate_processor --help
+```
+for details.
+
+
+### Code
+
 ```Ruby
 # define a class and derive it from Eventhub::Processor
 module EventHub
@@ -36,6 +46,19 @@ EventHub::Configuration.instance.load_file(config_file,environment)
 
 # create instance of your processor and start it
 EventHub::PlateStoreRouter.new.start
+```
+
+
+## Arguments
+
+You can use the default argument parser behaviour (-e, -d, -h) or extend it like:
+
+```
+parsed = EventHub::ArgumentParser.parse(['-x']) do |parser, options|
+  parser.on('-x') do
+    options.x = 'secret switch selected'
+  end
+end
 ```
 
 ## Contributing

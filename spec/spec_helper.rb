@@ -1,8 +1,8 @@
 require 'bundler/setup'
 Bundler.setup
 
-require 'eventhub-processor' 
+require 'eventhub-processor'
 
 RSpec.configure do |config|
-  # some (optional) config here
+  config.mock_with :rspec
 end

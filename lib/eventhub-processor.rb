@@ -16,8 +16,15 @@ require_relative 'eventhub/multi_logger'
 
 require_relative 'eventhub/configuration'
 require_relative 'eventhub/hash_extensions'
+require_relative 'eventhub/statistics'
+require_relative 'eventhub/heartbeat'
+require_relative 'eventhub/pidfile'
 require_relative 'eventhub/processor'
+require_relative 'eventhub/message_processor'
 require_relative 'eventhub/message'
+
+require_relative 'eventhub/base_exception'
+require_relative 'eventhub/no_deadletter_exception'
 
 module EventHub
   def self.logger

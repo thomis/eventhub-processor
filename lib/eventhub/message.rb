@@ -43,29 +43,28 @@ module EventHub
       Message.new({ "status" =>  { "code" => STATUS_INVALID, "message" => "JSON parse error: #{e}" }} ,{ "original_message_base64_encoded" => Base64.encode64(raw)},raw)
     end
 
-    # process_step_position should be
-    def initialize(header=nil, body=nil,raw=nil)
+    def initialize(header = nil, body = nil, raw = nil)
 
       @header = header || {}
       @body   = body || {}
       @raw    = raw
 
       # set message defaults, that we have required headers
-      @header.set('message_id',UUIDTools::UUID.timestamp_create.to_s,false)
-      @header.set('version',VERSION,false)
-      @header.set('created_at',now_stamp,false)
+      @header.set('message_id', UUIDTools::UUID.timestamp_create.to_s, false)
+      @header.set('version', VERSION, false)
+      @header.set('created_at', now_stamp, false)
 
-      @header.set('origin.module_id','undefined',false)
-      @header.set('origin.type','undefined',false)
-      @header.set('origin.site_id','undefined',false)
+      @header.set('origin.module_id', 'undefined', false)
+      @header.set('origin.type', 'undefined', false)
+      @header.set('origin.site_id', 'undefined', false)
 
-      @header.set('process.name','undefined',false)
-      @header.set('process.execution_id',UUIDTools::UUID.timestamp_create.to_s,false)
-      @header.set('process.step_position',0,false)
+      @header.set('process.name', 'undefined', false)
+      @header.set('process.execution_id', UUIDTools::UUID.timestamp_create.to_s, false)
+      @header.set('process.step_position', 0, false)
 
-      @header.set('status.retried_count',0,false)
-      @header.set('status.code',STATUS_INITIAL,false)
-      @header.set('status.message','',false)
+      @header.set('status.retried_count', 0, false)
+      @header.set('status.code', STATUS_INITIAL, false)
+      @header.set('status.message', '', false)
 
     end
 
@@ -90,6 +89,10 @@ module EventHub
       self.status_code == STATUS_RETRY_PENDING
     end
 
+    def invalid?
+      self.status_code == STATUS_INVALID
+    end
+
     def to_json
       {'header' => self.header, 'body' => self.body}.to_json
     end
@@ -99,10 +102,10 @@ module EventHub
     end
 
     # copies the message and set's provided status code (default: success), actual stamp, and a new message id
-    def copy(status_code=STATUS_SUCCESS)
-      
+    def copy(status_code = STATUS_SUCCESS)
+
       # use Marshal dump and load to make a deep object copy
-      copied_header = Marshal.load( Marshal.dump(header)) 
+      copied_header = Marshal.load( Marshal.dump(header))
       copied_body   = Marshal.load( Marshal.dump(body))
 
       copied_header.set("message_id",UUIDTools::UUID.timestamp_create.to_s)
@@ -110,7 +113,14 @@ module EventHub
       copied_header.set("status.code",status_code)
 
       Message.new(copied_header, copied_body)
-    end  
+    end
+
+    def append_to_execution_history(processor_name)
+      unless header.get('execution_history')
+        header.set('execution_history', [])
+      end
+      header.get('execution_history') << {'processor' => processor_name, 'timestamp' => now_stamp}
+    end
 
     def self.translate_status_code(code)
       case code

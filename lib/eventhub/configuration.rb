@@ -8,13 +8,12 @@ module EventHub
 
     def initialize
       @data = nil
-      @folder = Dir.pwd
       @environment = 'development'
     end
 
     def load_file(input, env = 'development')
-      tmp = JSON.parse( IO.read(input))
-      @data = tmp[env]
+      json = JSON.parse(IO.read(input))
+      @data = json[env]
       @environment = env
       true
     rescue => e

@@ -8,7 +8,7 @@ class Logger
       [time_in_string,Process.pid,severity,msg].join("\t") + "\n"
     end
   end
-  
+
 end
 
 
@@ -20,15 +20,15 @@ module EventHub
 
     attr_accessor :folder, :devices
 
-    def initialize(folder=nil)
-        @folder_base = folder || Dir.pwd
-        @folder_base.chomp!('/')
-        @folder            = [@folder_base,'logs'].join('/')
-        @folder_exceptions = [@folder_base,'exceptions'].join('/')
-        
-        @devices = []
+    def initialize(folder = nil)
+      @folder_base = folder || Dir.pwd
+      @folder_base.chomp!('/')
+      @folder            = [@folder_base,'logs'].join('/')
+      @folder_exceptions = [@folder_base,'exceptions'].join('/')
 
-        FileUtils.makedirs(@folder)
+      @devices = []
+
+      FileUtils.makedirs(@folder)
     end
 
     def add_device(device)
@@ -68,7 +68,7 @@ module EventHub
   	    File.open("#{@folder_exceptions}/#{stamp}.msg.raw","wb") do |output|
   	    	output.write(message)
   	    end
-    	end	
+    	end
 
       return stamp
     end
@@ -85,5 +85,5 @@ end
 
 
 
-  
+
 
