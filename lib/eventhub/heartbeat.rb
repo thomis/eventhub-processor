@@ -36,7 +36,7 @@ module EventHub
           heartbeat_cycle_in_ms:  processor.heartbeat_cycle_in_s * 1000,
           served_queues:          [processor.listener_queues],
           host:                   Socket.gethostname,
-          ip_addresses:           ip_addresses,
+          addresses:              addresses,
           messages: {
             total:                statistics.messages_total,
             successful:           statistics.messages_successful,
@@ -51,7 +51,7 @@ module EventHub
 
     private
 
-    def ip_addresses
+    def addresses
       interfaces = Socket.getifaddrs.select do |interface|
         !interface.addr.ipv4_loopback? && !interface.addr.ipv6_loopback?
       end
