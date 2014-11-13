@@ -44,7 +44,7 @@ module EventHub
             unsuccessful:               statistics.messages_unsuccessful,
             average_size:               statistics.messages_average_size,
             average_process_time_in_ms: statistics.messages_average_process_time*1000,
-            total_prozess_time_in_ms:   statistics.messages_total_process_time*1000
+            total_process_time_in_ms:   statistics.messages_total_process_time*1000
           }
         }
       }
