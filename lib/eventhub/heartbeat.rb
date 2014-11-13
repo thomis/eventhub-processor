@@ -30,19 +30,21 @@ module EventHub
         process_name: 'event_hub.heartbeat',
 
         heartbeat: {
-          started:                now_stamp(started_at),
-          stamp_last_beat:        now_stamp(now),
-          uptime:                 duration(now - started_at),
-          heartbeat_cycle_in_ms:  processor.heartbeat_cycle_in_s * 1000,
-          served_queues:          [processor.listener_queues],
-          host:                   Socket.gethostname,
-          addresses:              addresses,
+          started:                      now_stamp(started_at),
+          stamp_last_beat:              now_stamp(now),
+          uptime_in_ms:                 (now - started_at)*1000,
+          heartbeat_cycle_in_ms:        processor.heartbeat_cycle_in_s * 1000,
+          queues_consuming_from:        processor.listener_queues,
+          queues_publishing_to:         ['event_hub.inbound'], # needs more dynamic in the future
+          host:                         Socket.gethostname,
+          addresses:                    addresses,
           messages: {
-            total:                statistics.messages_total,
-            successful:           statistics.messages_successful,
-            unsuccessful:         statistics.messages_unsuccessful,
-            average_size:         statistics.messages_average_size,
-            average_process_time: statistics.messages_average_process_time
+            total:                      statistics.messages_total,
+            successful:                 statistics.messages_successful,
+            unsuccessful:               statistics.messages_unsuccessful,
+            average_size:               statistics.messages_average_size,
+            average_process_time_in_ms: statistics.messages_average_process_time*1000,
+            total_prozess_time_in_ms:   statistics.messages_total_process_time*1000
           }
         }
       }

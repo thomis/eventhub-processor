@@ -47,4 +47,31 @@ describe EventHub::Helper do
 
 	end
 
+	context "duration" do
+		it "has correct duration string" do
+			start = Time.new(2014, 1, 1, 12, 0, 0)
+			stop  = Time.new(2014, 1, 1, 12, 0, 5)
+			expect(duration(stop - start)).to eq("5 seconds")
+		end
+
+		it "has correct duration string 2" do
+			start = Time.new(2014, 1, 1, 12, 0, 0)
+			stop  = Time.new(2014, 1, 1, 12, 0, 1)
+			expect(duration(stop - start)).to eq("1 second")
+		end
+
+		it "has correct negative duration string" do
+			start = Time.new(2014, 1, 1, 12, 0, 0)
+			stop  = Time.new(2014, 1, 1, 12, 0, 5)
+			expect(duration(start - stop)).to eq("-5 seconds")
+		end
+
+		it "has correct negative duration string 2" do
+			start = Time.new(2014, 1, 1, 12, 0, 0)
+			stop  = Time.new(2014, 1, 1, 12, 0, 1)
+			expect(duration(start - stop)).to eq("-1 second")
+		end
+
+	end
+
 end

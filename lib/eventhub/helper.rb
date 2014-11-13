@@ -21,6 +21,9 @@ module EventHub
 	  end
 
 	  def duration(difference)
+	  	negative = difference < 0
+	  	difference = difference.abs
+
 			rest, secs = difference.divmod( 60 )  # self is the time difference t2 - t1
 			rest, mins = rest.divmod( 60 )
 			days, hours = rest.divmod( 24 )
@@ -38,7 +41,7 @@ module EventHub
 			result << "#{secs} second" if secs == 1
 			result << "#{milliseconds} milliseconds" if milliseconds > 1
 			result << "#{milliseconds} millisecond" if milliseconds == 1
-			return result.join(' ')
+			return (negative ? "-" : "") + result.join(' ')
     end
 
 	end

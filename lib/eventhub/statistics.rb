@@ -6,6 +6,7 @@ class EventHub::Statistics
     @messages_unsuccessful = 0
     @messages_average_size = 0
     @messages_average_process_time = 0
+    @messages_total_process_time = 0
   end
 
 
@@ -21,6 +22,7 @@ class EventHub::Statistics
   end
 
   def success(process_time, size)
+    @messages_total_process_time += process_time
     @messages_average_process_time = (messages_total_process_time + process_time) / (messages_successful + 1).to_f
     @messages_average_size = (messages_total_size + size) / (messages_successful + 1).to_f
     @messages_successful += 1
