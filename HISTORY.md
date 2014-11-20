@@ -1,3 +1,7 @@
+### 0.4.0 2014-11-20
+
+* Extracted code to eventhub-components gem
+
 ### 0.3.1 2014-11-13
 
 * Bug fixes

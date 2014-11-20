@@ -29,7 +29,7 @@ require_relative 'eventhub/no_deadletter_exception'
 module EventHub
   def self.logger
   	unless @logger
-  		@logger = MultiLogger.new
+  		@logger = ::EventHub::Components::MultiLogger.new
       @logger.add_device(Logger.new(STDOUT))
   	end
   	@logger

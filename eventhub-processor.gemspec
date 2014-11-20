@@ -26,4 +26,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "rest-client", "~> 1.7.2", '>= 1.7.2'
   spec.add_runtime_dependency "amqp", "~> 1.5.0", '>= 1.5.0'
   spec.add_runtime_dependency "uuidtools", "~> 2.1", '>= 2.1'
+  spec.add_runtime_dependency "eventhub-components", ">= 0.0.5"
 end
