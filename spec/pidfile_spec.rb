@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'fileutils'
 
-describe EventHub::Pidfile do
+describe EventHub::Components::Pidfile do
   before(:each) do
     FileUtils.remove_dir('/tmp/eventhub_pid_test', true)
   end
@@ -10,7 +10,7 @@ describe EventHub::Pidfile do
     FileUtils.remove_dir('/tmp/eventhub_pid_test', true)
   end
 
-  let(:pidfile) {  pidfile = EventHub::Pidfile.new('/tmp/eventhub_pid_test/some.pid') }
+  let(:pidfile) {  pidfile = EventHub::Components::Pidfile.new('/tmp/eventhub_pid_test/some.pid') }
 
   it 'creates the folders if not existing' do
     pidfile.write(1234)
