@@ -254,7 +254,7 @@ module EventHub
 			# daemonize
 			Process.daemon
 
-			pidfile.write(Process.pid.to_s)
+			@pidfile.write(Process.pid.to_s)
 		end
 
 		def post_start
