@@ -86,7 +86,7 @@ module EventHub
 					post_start
 
 				rescue => e
-					id = exception_writer.write(e)
+					id = @exception_writer.write(e)
 					EventHub.logger.error("Unexpected exception: #{e}, see => #{id}. Trying to restart in #{self.restart_in_s} seconds...")
 					sleep_break self.restart_in_s
 				end
@@ -188,12 +188,12 @@ module EventHub
 		    		rescue EventHub::NoDeadletterException => e
 				  		@channel_receiver.reject(metadata.delivery_tag, true)
 				  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message will be requeued.")
-							exception_writer.write(e)
+							@exception_writer.write(e)
 							sleep_break self.restart_in_s
 				  	rescue => e
 				  		@channel_receiver.reject(metadata.delivery_tag, false)
 				  		EventHub.logger.error("Unexpected exception in handle_message method: #{e}. Message dead lettered.")
-							exception_writer.write(e)
+							@exception_writer.write(e)
 				  	end
 				  end
 
