@@ -10,7 +10,7 @@ module EventHub
 
 		def initialize(name=nil)
 			@name = name || class_to_array(self.class)[1..-1].join(".")
-			@pidfile = EventHub::Components::Pidfile.new(File.join(Dir.pwd, 'pids', "#{name}.pid"))
+			@pidfile = EventHub::Components::Pidfile.new(File.join(Dir.pwd, 'pids', "#{@name}.pid"))
 			@exception_writer = EventHub::Components::ExceptionWriter.new
 			@statistics = EventHub::Statistics.new
 			@heartbeat = EventHub::Heartbeat.new(self)
