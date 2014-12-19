@@ -78,7 +78,7 @@ module EventHub
     end
 
     def retry?
-      !success?
+      self.status_code == STATUS_RETRY
     end
 
     def initial?

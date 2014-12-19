@@ -132,4 +132,23 @@ describe EventHub::Message do
 		end
 	end
 
+	context "retry" do
+		it "should response to retry?" do
+			@m.status_code = EventHub::STATUS_RETRY
+			expect(@m.retry?).to eq(true)
+
+			@m.status_code = EventHub::STATUS_SUCCESS
+			expect(@m.retry?).to eq(false)
+
+			@m.status_code = 'STATUS_RETRY'
+			expect(@m.retry?).to eq(false)
+
+			@m.status_code = 'UNKNOWN_CODE'
+			expect(@m.retry?).to eq(false)
+
+			@m.status_code = 90000
+			expect(@m.retry?).to eq(false)
+		end
+	end
+
 end
