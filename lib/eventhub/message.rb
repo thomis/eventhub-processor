@@ -25,22 +25,22 @@ module EventHub
 
     # Build accessors for all required headers
     REQUIRED_HEADERS.each do |header|
-      name = header.gsub(/\./,"_")
+      name = header.gsub(/\./, "_")
 
       define_method(name) do
         self.header.get(header)
       end
 
       define_method("#{name}=") do |value|
-        self.header.set(header,value)
+        self.header.set(header, value)
       end
     end
 
     def self.from_json(raw)
       data = JSON.parse(raw)
-      Message.new(data.get('header'), data.get('body'),raw)
+      Message.new(data.get('header'), data.get('body'), raw)
     rescue => e
-      Message.new({ "status" =>  { "code" => STATUS_INVALID, "message" => "JSON parse error: #{e}" }} ,{ "original_message_base64_encoded" => Base64.encode64(raw)},raw)
+      Message.new({ "status" =>  { "code" => STATUS_INVALID, "message" => "JSON parse error: #{e}" }}, { "original_message_base64_encoded" => Base64.encode64(raw)}, raw)
     end
 
     def initialize(header = nil, body = nil, raw = nil)
@@ -70,7 +70,7 @@ module EventHub
 
     def valid?
       # check for existence and defined value
-      REQUIRED_HEADERS.all? { |key| @header.all_keys_with_path.include?(key) && !!self.send(key.gsub(/\./,"_").to_sym)}
+      REQUIRED_HEADERS.all? { |key| @header.all_keys_with_path.include?(key) && !!self.send(key.gsub(/\./, "_").to_sym)}
     end
 
     def success?
@@ -108,9 +108,9 @@ module EventHub
       copied_header = Marshal.load( Marshal.dump(header))
       copied_body   = Marshal.load( Marshal.dump(body))
 
-      copied_header.set("message_id",UUIDTools::UUID.timestamp_create.to_s)
-      copied_header.set("created_at",now_stamp)
-      copied_header.set("status.code",status_code)
+      copied_header.set("message_id", UUIDTools::UUID.timestamp_create.to_s)
+      copied_header.set("created_at", now_stamp)
+      copied_header.set("status.code", status_code)
 
       Message.new(copied_header, copied_body)
     end

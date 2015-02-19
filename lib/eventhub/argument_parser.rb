@@ -13,7 +13,7 @@ module EventHub
         opts.banner = "Usage: #{args[0]}.rb [options]"
         yield(opts, options) if block_given? # allow to add more options
 
-        opts.on("-e", "--environment ENVIRONMENT","Environment the processor is running") do |environment|
+        opts.on("-e", "--environment ENVIRONMENT", "Environment the processor is running") do |environment|
           options.environment = environment
         end
 

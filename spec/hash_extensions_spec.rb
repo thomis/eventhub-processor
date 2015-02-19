@@ -52,7 +52,7 @@ describe HashExtensions do
       end
 
       it "should not overwrite a value" do
-        expect(@h.set("b.c", "new_value",false)).to eq("d")
+        expect(@h.set("b.c", "new_value", false)).to eq("d")
       end
 
       it "should set nil" do
@@ -71,11 +71,11 @@ describe HashExtensions do
       end
 
       it "should not overwrite a value" do
-        expect(@h.set(%w(b c), "new_value",false)).to eq("d")
+        expect(@h.set(%w(b c), "new_value", false)).to eq("d")
       end
 
       it "should set nil" do
-        expect(@h.set(%w(b c),nil)).to eq(nil)
+        expect(@h.set(%w(b c), nil)).to eq(nil)
       end
 
     end
@@ -84,7 +84,7 @@ describe HashExtensions do
 
   context "all_keys_with_path" do
     it "should get all key paths in an array" do
-      expect(@h.all_keys_with_path).to eq(['a','b.c'])
+      expect(@h.all_keys_with_path).to eq(['a', 'b.c'])
     end
 
     it "should get an empy array if empty hash was passed" do

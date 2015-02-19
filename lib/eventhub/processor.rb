@@ -231,7 +231,7 @@ module EventHub
       stop_processor
     end
 
-    def stop_processor(restart=false)
+    def stop_processor(restart = false)
       @restart = restart
 
       # close channels

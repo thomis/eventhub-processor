@@ -34,15 +34,15 @@ for details.
 module EventHub
 	class PlateStoreRouter < Processor
 		# this is the method to deal with the message
-		def handle_message(metadata,payload)
+		def handle_message(metadata, payload)
 			puts payload
 		end
 	end
 end
 
 # load configuration file if required and start your processor
-config_file = ['config',"#{File.basename(__FILE__,'.rb')}.json"].join('/')
-EventHub::Configuration.instance.load_file(config_file,environment)
+config_file = ['config', "#{File.basename(__FILE__, '.rb')}.json"].join('/')
+EventHub::Configuration.instance.load_file(config_file, environment)
 
 # create instance of your processor and start it
 EventHub::PlateStoreRouter.new.start
