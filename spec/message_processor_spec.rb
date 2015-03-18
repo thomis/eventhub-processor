@@ -32,11 +32,25 @@ describe EventHub::MessageProcessor do
 
     allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return('b.stamp')
     response = message_processor.process(Object.new, message.to_json)
+    puts response
     execution_history =  response[0].header.get('execution_history')
 
     expect(execution_history.size).to eq(2)
     expect(execution_history[0]).to eq({'processor' => 'a.processor', 'timestamp' => 'a.stamp'})
     expect(execution_history[1]).to eq({'processor' => 'b.processor', 'timestamp' => 'b.stamp'})
+  end
+
+  it 'should handle message payload as an array' do
+    messages = []
+    message = EventHub::Message.new
+    messages << message
+
+    message = EventHub::Message.new
+    messages << message
+
+    response = message_processor.process(Object.new, messages)
+    expect(response.size).to eq(2)
+    #puts response.size
   end
 
 end

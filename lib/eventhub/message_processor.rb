@@ -8,6 +8,21 @@ class EventHub::MessageProcessor
   def process(params, payload)
     messages_to_send = []
 
+    # check if payload is an array
+    if payload.kind_of?(Array)
+      payload.each do |one_message|
+        messages_to_send << handle(params, one_message.to_json)
+      end
+    else
+      messages_to_send = handle(params, payload)
+    end
+
+    messages_to_send
+  end
+
+  private
+
+  def handle(params, payload)
     # try to convert to EventHub message
     message = EventHub::Message.from_json(payload)
     EventHub.logger.info("-> #{message.to_s}")
@@ -25,7 +40,6 @@ class EventHub::MessageProcessor
         messages_to_send = Array(processor.handle_message(message,params))
       end
     end
-
     messages_to_send
   end
 end
