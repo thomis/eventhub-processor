@@ -43,10 +43,10 @@ describe EventHub::MessageProcessor do
   it 'should handle message payload as an array' do
     messages = []
     message = EventHub::Message.new
-    messages << message
+    messages << message.to_json
 
     message = EventHub::Message.new
-    messages << message
+    messages << message.to_json
 
     response = message_processor.process(Object.new, messages)
     expect(response.size).to eq(2)

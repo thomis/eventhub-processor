@@ -11,7 +11,7 @@ class EventHub::MessageProcessor
     # check if payload is an array
     if payload.kind_of?(Array)
       payload.each do |one_message|
-        messages_to_send << handle(params, one_message.to_json)
+        messages_to_send << handle(params, one_message)
       end
     else
       messages_to_send = handle(params, payload)
