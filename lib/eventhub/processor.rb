@@ -104,10 +104,24 @@ module EventHub
       raise 'Please implement method in derived class'
     end
 
+    def call_service(method, url)
+      response = RestClient::Request.execute(method: method, url: url,
+      ssl_ca_file: '/apps/sys_eventhub1/certs/cacert.pem',
+      verify_ssl: OpenSSL::SSL::VERIFY_NONE,
+        headers: {
+          content_type: 'application/json',
+          accept: 'application/json'
+        }
+      )
+      return response
+    end
+
     def watchdog
       self.listener_queues.each do |queue_name|
         begin
-          response = RestClient.get "http://#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings", { :content_type => :json}
+          url = "https://#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings"
+          response = call_service(:get, url)
+
           data = JSON.parse(response.body)
 
           if response.code != 200
@@ -116,7 +130,7 @@ module EventHub
           elsif data.size == 0
             EventHub.logger.warn("Watchdog: Something is wrong with the vhost, queue [#{queue_name}], and/or bindings. Trying to restart in #{self.restart_in_s} seconds...")
             EventMachine.add_timer(self.restart_in_s) { stop_processor(true) }
-            # does it make sence ? Needs maybe more checks in future
+            # does it make sense ? Needs maybe more checks in future
           else
             # Watchdog is happy :-)
             # add timer for next check
