@@ -178,7 +178,8 @@ module EventHub
         handle_connection_loss
 
         # create channel
-        @channel_receiver = AMQP::Channel.new(@connection, prefetch: 1)
+        @channel_receiver = AMQP::Channel.new(@connection)
+        @channel_receiver.prefetch(10,true)
 
         self.listener_queues.each do |queue_name|
 
@@ -196,7 +197,7 @@ module EventHub
                   send_message(message)
                 end if messages_to_send
 
-                @channel_receiver.acknowledge(metadata.delivery_tag)
+                metadata.ack
               end
 
             rescue EventHub::NoDeadletterException => e
