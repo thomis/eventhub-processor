@@ -179,7 +179,7 @@ module EventHub
 
         # create channel
         @channel_receiver = AMQP::Channel.new(@connection)
-        @channel_receiver.prefetch(10,true)
+        @channel_receiver.prefetch(100)
 
         self.listener_queues.each do |queue_name|
 
@@ -192,12 +192,15 @@ module EventHub
               statistics.measure(payload.size) do
                 messages_to_send = @message_processor.process({ metadata: metadata, queue_name: queue_name}, payload)
 
+                # ack message before publish
+                metadata.ack
+
                 # forward invalid or returned messages to dispatcher
                 messages_to_send.each do |message|
                   send_message(message)
                 end if messages_to_send
 
-                metadata.ack
+
               end
 
             rescue EventHub::NoDeadletterException => e
