@@ -180,6 +180,11 @@ module EventHub
         # create channel
         @channel_receiver = AMQP::Channel.new(@connection)
         @channel_receiver.prefetch(100)
+        @channel_receiver.auto_recovery = true
+
+        if @channel_receiver.auto_recovering?
+          EventHub.logger.warn("Channel #{@channel_receiver.id} IS auto-recovering")
+        end
 
         self.listener_queues.each do |queue_name|
 
@@ -229,7 +234,7 @@ module EventHub
     def handle_connection_loss
       @connection.on_tcp_connection_loss do |conn, settings|
         EventHub.logger.warn("Processor lost tcp connection. Trying to restart in #{self.restart_in_s} seconds...")
-        stop_processor(true)
+        conn.reconnect(false, self.restart_in_s)
       end
     end
 
