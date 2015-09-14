@@ -45,6 +45,10 @@ module EventHub
       configuration.get('server.vhost') || 'event_hub'
     end
 
+    def server_ssl?
+      configuration.get('server.ssl') || false
+    end
+
     def connection_settings
       { user: server_user, password: server_password, host: server_host, vhost: server_vhost }
     end
@@ -105,21 +109,34 @@ module EventHub
     end
 
     def call_service(method, url)
-      response = RestClient::Request.execute(method: method, url: url,
-      ssl_ca_file: '/apps/sys_eventhub1/certs/cacert.pem',
-      verify_ssl: OpenSSL::SSL::VERIFY_NONE,
-        headers: {
-          content_type: 'application/json',
-          accept: 'application/json'
-        }
-      )
+      if server_ssl?
+        # ssl
+        url = "https://" + url
+        response = RestClient::Request.execute(method: method, url: url,
+        ssl_ca_file: '/apps/sys_eventhub1/certs/cacert.pem',
+        verify_ssl: OpenSSL::SSL::VERIFY_NONE,
+          headers: {
+            content_type: 'application/json',
+            accept: 'application/json'
+          }
+        )
+      else
+        # no ssl
+        url = "http://" + url
+        response = RestClient::Request.execute(method: method, url: url,
+          headers: {
+            content_type: 'application/json',
+            accept: 'application/json'
+          }
+        )
+      end
       return response
     end
 
     def watchdog
       self.listener_queues.each do |queue_name|
         begin
-          url = "https://#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings"
+          url = "#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings"
           response = call_service(:get, url)
 
           data = JSON.parse(response.body)
