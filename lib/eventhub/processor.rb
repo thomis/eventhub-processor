@@ -45,6 +45,10 @@ module EventHub
       configuration.get('server.vhost') || 'event_hub'
     end
 
+    def server_ssl?
+      configuration.get('server.ssl') || false
+    end
+
     def connection_settings
       { user: server_user, password: server_password, host: server_host, vhost: server_vhost }
     end
@@ -104,10 +108,37 @@ module EventHub
       raise 'Please implement method in derived class'
     end
 
+    def call_service(method, url)
+      if server_ssl?
+        # ssl
+        url = "https://" + url
+        response = RestClient::Request.execute(method: method, url: url,
+        ssl_ca_file: '/apps/sys_eventhub1/certs/cacert.pem',
+        verify_ssl: OpenSSL::SSL::VERIFY_NONE,
+          headers: {
+            content_type: 'application/json',
+            accept: 'application/json'
+          }
+        )
+      else
+        # no ssl
+        url = "http://" + url
+        response = RestClient::Request.execute(method: method, url: url,
+          headers: {
+            content_type: 'application/json',
+            accept: 'application/json'
+          }
+        )
+      end
+      return response
+    end
+
     def watchdog
       self.listener_queues.each do |queue_name|
         begin
-          response = RestClient.get "http://#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings", { :content_type => :json}
+          url = "#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings"
+          response = call_service(:get, url)
+
           data = JSON.parse(response.body)
 
           if response.code != 200
@@ -116,7 +147,7 @@ module EventHub
           elsif data.size == 0
             EventHub.logger.warn("Watchdog: Something is wrong with the vhost, queue [#{queue_name}], and/or bindings. Trying to restart in #{self.restart_in_s} seconds...")
             EventMachine.add_timer(self.restart_in_s) { stop_processor(true) }
-            # does it make sence ? Needs maybe more checks in future
+            # does it make sense ? Needs maybe more checks in future
           else
             # Watchdog is happy :-)
             # add timer for next check
@@ -164,7 +195,13 @@ module EventHub
         handle_connection_loss
 
         # create channel
-        @channel_receiver = AMQP::Channel.new(@connection, prefetch: 1)
+        @channel_receiver = AMQP::Channel.new(@connection)
+        @channel_receiver.prefetch(100)
+        @channel_receiver.auto_recovery = true
+
+        if @channel_receiver.auto_recovering?
+          EventHub.logger.warn("Channel #{@channel_receiver.id} IS auto-recovering")
+        end
 
         self.listener_queues.each do |queue_name|
 
@@ -177,12 +214,15 @@ module EventHub
               statistics.measure(payload.size) do
                 messages_to_send = @message_processor.process({ metadata: metadata, queue_name: queue_name}, payload)
 
+                # ack message before publish
+                metadata.ack
+
                 # forward invalid or returned messages to dispatcher
                 messages_to_send.each do |message|
                   send_message(message)
                 end if messages_to_send
 
-                @channel_receiver.acknowledge(metadata.delivery_tag)
+
               end
 
             rescue EventHub::NoDeadletterException => e
@@ -211,7 +251,7 @@ module EventHub
     def handle_connection_loss
       @connection.on_tcp_connection_loss do |conn, settings|
         EventHub.logger.warn("Processor lost tcp connection. Trying to restart in #{self.restart_in_s} seconds...")
-        stop_processor(true)
+        conn.reconnect(false, self.restart_in_s)
       end
     end
 
