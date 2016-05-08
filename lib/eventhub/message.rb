@@ -93,6 +93,14 @@ module EventHub
       self.status_code == STATUS_INVALID
     end
 
+    def scheduled?
+      self.status_code == STATUS_SCHEDULE
+    end
+
+    def schedule_pending?
+      self.status_code == STATUS_SCHEDULE_PENDING
+    end
+
     def to_json
       {'header' => self.header, 'body' => self.body}.to_json
     end

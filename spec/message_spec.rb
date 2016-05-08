@@ -153,4 +153,21 @@ describe EventHub::Message do
     end
   end
 
+  context "schedule" do
+    it "should response to scheduled?" do
+      expect(@m.scheduled?).to eq(false)
+
+      @m.status_code = EventHub::STATUS_SCHEDULE
+      expect(@m.scheduled?).to eq(true)
+    end
+
+    it 'should response to schedule_pending?' do
+      expect(@m.schedule_pending?).to eq(false)
+
+      @m.status_code = EventHub::STATUS_SCHEDULE_PENDING
+      expect(@m.schedule_pending?).to eq(true)
+    end
+
+  end
+
 end
