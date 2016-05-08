@@ -96,12 +96,14 @@ describe EventHub::Message do
 
   context "translate status code" do
     it "should translate status code to meaningful string" do
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_INITIAL)).to        eq('STATUS_INITIAL')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SUCCESS)).to        eq('STATUS_SUCCESS')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_RETRY)).to          eq('STATUS_RETRY')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_RETRY_PENDING)).to  eq('STATUS_RETRY_PENDING')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_INVALID)).to        eq('STATUS_INVALID')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_DEADLETTER)).to     eq('STATUS_DEADLETTER')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_INITIAL)).to            eq('STATUS_INITIAL')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SUCCESS)).to            eq('STATUS_SUCCESS')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_RETRY)).to              eq('STATUS_RETRY')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_RETRY_PENDING)).to      eq('STATUS_RETRY_PENDING')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_INVALID)).to            eq('STATUS_INVALID')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_DEADLETTER)).to         eq('STATUS_DEADLETTER')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE)).to           eq('STATUS_SCHEDULE')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE_PENDING)).to   eq('STATUS_SCHEDULE_PENDING')
     end
   end
 

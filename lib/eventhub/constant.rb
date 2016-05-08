@@ -13,4 +13,6 @@ module EventHub
   STATUS_DEADLETTER       = 500       # To be set by dispatcher, processor or channel adapters to indicate
                                       # that message needs to be dead-lettered. Rejected messages could miss the
                                       # status.code = STATUS_DEADLETTER due to the RabbitMQ deadletter exchange mechanism.
+  STATUS_SCHEDULE         = 600       # To be set to trigger scheduler based on schedule block
+  STATUS_SCHEDULE_PENDING = 601       # Set and used by the dispatcher only
 end
