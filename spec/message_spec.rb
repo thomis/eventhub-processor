@@ -103,6 +103,7 @@ describe EventHub::Message do
       expect(EventHub::Message.translate_status_code(EventHub::STATUS_INVALID)).to            eq('STATUS_INVALID')
       expect(EventHub::Message.translate_status_code(EventHub::STATUS_DEADLETTER)).to         eq('STATUS_DEADLETTER')
       expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE)).to           eq('STATUS_SCHEDULE')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE_RETRY)).to     eq('STATUS_SCHEDULE_RETRY')
       expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE_PENDING)).to   eq('STATUS_SCHEDULE_PENDING')
     end
   end
@@ -154,11 +155,18 @@ describe EventHub::Message do
   end
 
   context "schedule" do
-    it "should response to scheduled?" do
-      expect(@m.scheduled?).to eq(false)
+    it "should response to schedule?" do
+      expect(@m.schedule?).to eq(false)
 
       @m.status_code = EventHub::STATUS_SCHEDULE
-      expect(@m.scheduled?).to eq(true)
+      expect(@m.schedule?).to eq(true)
+    end
+
+    it "should response to schedule_retry?" do
+      expect(@m.schedule_retry?).to eq(false)
+
+      @m.status_code = EventHub::STATUS_SCHEDULE_RETRY
+      expect(@m.schedule_retry?).to eq(true)
     end
 
     it 'should response to schedule_pending?' do
