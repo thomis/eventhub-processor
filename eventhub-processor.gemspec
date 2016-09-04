@@ -18,13 +18,13 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_development_dependency 'bundler', '~> 1.3', '>= 1.3.0'
-  spec.add_development_dependency "rake", "~> 10.3.0", '>= 10.3.0'
-  spec.add_development_dependency "rspec", "~> 3.0.0", '>= 3.0.0'
-  spec.add_development_dependency 'rspec-mocks', '~> 3.0.0', '>= 3.0.0'
+  spec.add_development_dependency 'bundler', '>= 1.12.5'
+  spec.add_development_dependency "rake", '>= 11.11.2'
+  spec.add_development_dependency "rspec", '>= 3.5.0'
+  spec.add_development_dependency 'rspec-mocks', '~> 3.5.0'
 
-  spec.add_runtime_dependency "rest-client", "~> 1.7.2", '>= 1.7.2'
-  spec.add_runtime_dependency "amqp", "~> 1.5.0", '>= 1.5.0'
-  spec.add_runtime_dependency "uuidtools", "~> 2.1", '>= 2.1'
-  spec.add_runtime_dependency 'eventhub-components', '~> 0.0', '>= 0.0.7'
+  spec.add_runtime_dependency "rest-client", '>= 2.0.0'
+  spec.add_runtime_dependency "amqp", '>= 1.6.0'
+  spec.add_runtime_dependency "uuidtools", '>= 2.1.5'
+  spec.add_runtime_dependency 'eventhub-components', '>= 0.1.8'
 end
