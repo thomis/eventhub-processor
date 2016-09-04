@@ -1,3 +1,5 @@
+[![Gem Version](https://badge.fury.io/rb/eventhub-processor.svg)](https://badge.fury.io/rb/eventhub-processor)
+
 eventhub-processor
 =================
 
