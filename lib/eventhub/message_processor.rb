@@ -37,7 +37,7 @@ class EventHub::MessageProcessor
       if processor.method(:handle_message).arity == 1
         messages_to_send = Array(processor.handle_message(message))
       else
-        messages_to_send = Array(processor.handle_message(message,params))
+        messages_to_send = Array(processor.handle_message(message, params))
       end
     end
     messages_to_send

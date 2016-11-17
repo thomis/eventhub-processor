@@ -15,7 +15,7 @@ describe EventHub::Helper do
 
     it "should convert a class name to a string" do
       c = EventHub::PlateStore::Router.new
-      expect(EventHub::Helper.class_to_array(c.class)).to  eq(["event_hub", "plate_store","router"])
+      expect(EventHub::Helper.class_to_array(c.class)).to  eq(["event_hub", "plate_store", "router"])
     end
 
     it "should be able to deal with a string" do
