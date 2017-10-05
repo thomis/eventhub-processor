@@ -136,7 +136,7 @@ module EventHub
     def watchdog
       self.listener_queues.each do |queue_name|
         begin
-          url = "#{self.server_user}:#{self.server_password}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings"
+          url = "#{self.server_user}:#{CGI::escape(self.server_password)}@#{self.server_host}:#{self.server_management_port}/api/queues/#{self.server_vhost}/#{queue_name}/bindings"
           response = call_service(:get, url)
 
           data = JSON.parse(response.body)
