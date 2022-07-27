@@ -3,7 +3,7 @@
 
 ## Important information from 2022-07-27
 
-This component has been replaced by eventhub-processor2 and will no longer be maintained. Please upgrade to new processor2 gem.
+This component has been replaced by https://github.com/thomis/eventhub-processor2 and will no longer be maintained. Please upgrade to new processor2 gem.
 
 
 eventhub-processor
