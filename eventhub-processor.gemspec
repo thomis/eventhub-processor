@@ -20,8 +20,8 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency 'bundler', '>= 1.12.5'
   spec.add_development_dependency "rake", '>= 11.2.2'
-  spec.add_development_dependency "rspec", '>= 3.7.0'
-  spec.add_development_dependency 'rspec-mocks', '~> 3.7.0'
+  spec.add_development_dependency "rspec", '>= 3.11.0'
+  spec.add_development_dependency 'rspec-mocks', '~> 3.11.0'
 
   spec.add_runtime_dependency "rest-client", '>= 2.0.0'
   spec.add_runtime_dependency "amqp", '>= 1.6.0'

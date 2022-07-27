@@ -1,6 +1,10 @@
 [![Gem Version](https://badge.fury.io/rb/eventhub-processor.svg)](https://badge.fury.io/rb/eventhub-processor)
-[![Dependency Status](https://gemnasium.com/badges/github.com/thomis/eventhub-processor.svg)](https://gemnasium.com/github.com/thomis/eventhub-processor)
-[![Build Status](https://travis-ci.org/thomis/eventhub-processor.svg?branch=master)](https://travis-ci.org/thomis/eventhub-processor)
+
+
+## Important information from 2022-07-27
+
+* This component has been replaced by eventhub-processor2 and will no longer be maintained. Please upgrade to new processor2 gem.
+
 
 eventhub-processor
 =================
