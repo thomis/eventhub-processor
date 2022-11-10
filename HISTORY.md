@@ -1,3 +1,9 @@
+## 0.7.0 / 2022-11-10
+
+* Add: Use of standard ruby style guide, linter, and formatter
+* Add: Code coverage
+* Edit: Allow additional property to support cloud migration: amqp port and ssl
+
 ## 0.6.6 / 2017-11-07
 
 * Edit: rspec dependency update

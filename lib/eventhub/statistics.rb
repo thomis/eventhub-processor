@@ -9,16 +9,13 @@ class EventHub::Statistics
     @messages_total_process_time = 0
   end
 
-
   def measure(size, &block)
-    begin
-      start = Time.now
-      yield
-      success(Time.now - start, size)
-    rescue
-      failure
-      raise
-    end
+    start = Time.now
+    yield
+    success(Time.now - start, size)
+  rescue
+    failure
+    raise
   end
 
   def success(process_time, size)
@@ -43,5 +40,4 @@ class EventHub::Statistics
   def messages_total_size
     messages_average_size * messages_successful
   end
-
 end

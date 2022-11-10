@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 describe EventHub::Processor do
   before(:each) do
@@ -17,7 +17,25 @@ describe EventHub::Processor do
     expect(processor.server_ssl?).to eq(true)
   end
 
-  #it 'does something' do
+  it "should return default ssl settings" do
+    expect(processor.ssl_settings).to eq({})
+  end
+
+  it "should return enabled ssl settings" do
+    @configuration.set("server.ssl", true)
+    expect(processor.ssl_settings).to eq({cert_chain_file: nil, private_key_file: nil})
+  end
+
+  it "should return default port" do
+    expect(processor.server_port).to eq(5672)
+  end
+
+  it "should return custom port" do
+    @configuration.set("server.port", 1000)
+    expect(processor.server_port).to eq(1000)
+  end
+
+  # it 'does something' do
   #  metadata = double(:metadata, :delivery_tag => 'abcde')
   #  payload = "{}"
   #  queue = double(:queue)
@@ -30,8 +48,5 @@ describe EventHub::Processor do
   #  AMQP::Channel.stub(:new).and_return(channel)
   #
   #  processor.start
-  #end
-
-
-
+  # end
 end

@@ -9,7 +9,7 @@ class EventHub::MessageProcessor
     messages_to_send = []
 
     # check if payload is an array
-    if payload.kind_of?(Array)
+    if payload.is_a?(Array)
       payload.each do |one_message|
         messages_to_send << handle(params, one_message)
       end
@@ -25,20 +25,18 @@ class EventHub::MessageProcessor
   def handle(params, payload)
     # try to convert to EventHub message
     message = EventHub::Message.from_json(payload)
-    EventHub.logger.info("-> #{message.to_s}")
+    EventHub.logger.info("-> #{message}")
 
-    message.append_to_execution_history(self.processor.name)
+    message.append_to_execution_history(processor.name)
 
     if message.invalid?
       messages_to_send << message
-      EventHub.logger.info("-> #{message.to_s} => Put to queue [#{EventHub::EH_X_INBOUND}].")
-    else
+      EventHub.logger.info("-> #{message} => Put to queue [#{EventHub::EH_X_INBOUND}].")
+    elsif processor.method(:handle_message).arity == 1
       # pass received message to handler or dervied handler
-      if processor.method(:handle_message).arity == 1
-        messages_to_send = Array(processor.handle_message(message))
-      else
-        messages_to_send = Array(processor.handle_message(message,params))
-      end
+      messages_to_send = Array(processor.handle_message(message))
+    else
+      messages_to_send = Array(processor.handle_message(message, params))
     end
     messages_to_send
   end

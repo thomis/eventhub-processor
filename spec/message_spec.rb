@@ -1,7 +1,6 @@
-require 'spec_helper'
+require "spec_helper"
 
 describe EventHub::Message do
-
   before(:each) do
     @m = EventHub::Message.new
   end
@@ -13,7 +12,6 @@ describe EventHub::Message do
   end
 
   context "initialization" do
-
     it "should have a valid header (structure and data)" do
       expect(@m.valid?).to eq(true)
     end
@@ -27,27 +25,24 @@ describe EventHub::Message do
     end
 
     it "should initialize from a json string" do
-
       # construct a json string
       header = {}
-      body   = { "data" => "1"}
+      body = {"data" => "1"}
 
       EventHub::Message::REQUIRED_HEADERS.each do |key|
         header.set(key, "1")
       end
 
-      json = {'header' => header, 'body' => body}.to_json
+      json = {"header" => header, "body" => body}.to_json
 
       # build message from string
       m = EventHub::Message.from_json(json)
-
 
       expect(m.valid?).to eq(true)
 
       EventHub::Message::REQUIRED_HEADERS.each do |key|
         expect(header.get(key)).to eq("1")
       end
-
     end
 
     it "should initialize to INVALID from an invalid json string" do
@@ -60,8 +55,6 @@ describe EventHub::Message do
       expect(m.status_message).to match(/^JSON parse error/)
       expect(m.raw).to eq(invalid_json_string)
     end
-
-
   end
 
   context "copy" do
@@ -74,7 +67,7 @@ describe EventHub::Message do
       expect(copied_message.status_code).to eq(EventHub::STATUS_SUCCESS)
 
       EventHub::Message::REQUIRED_HEADERS.each do |key|
-        next if key =~ /message_id|created_at|status.code/i
+        next if /message_id|created_at|status.code/i.match?(key)
         expect(copied_message.header.get(key)).to eq(@m.header.get(key))
       end
     end
@@ -88,7 +81,7 @@ describe EventHub::Message do
       expect(copied_message.status_code).to eq(EventHub::STATUS_INVALID)
 
       EventHub::Message::REQUIRED_HEADERS.each do |key|
-        next if key =~ /message_id|created_at|status.code/i
+        next if /message_id|created_at|status.code/i.match?(key)
         expect(copied_message.header.get(key)).to eq(@m.header.get(key))
       end
     end
@@ -96,22 +89,21 @@ describe EventHub::Message do
 
   context "translate status code" do
     it "should translate status code to meaningful string" do
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_INITIAL)).to            eq('STATUS_INITIAL')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SUCCESS)).to            eq('STATUS_SUCCESS')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_RETRY)).to              eq('STATUS_RETRY')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_RETRY_PENDING)).to      eq('STATUS_RETRY_PENDING')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_INVALID)).to            eq('STATUS_INVALID')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_DEADLETTER)).to         eq('STATUS_DEADLETTER')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE)).to           eq('STATUS_SCHEDULE')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE_RETRY)).to     eq('STATUS_SCHEDULE_RETRY')
-      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE_PENDING)).to   eq('STATUS_SCHEDULE_PENDING')
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_INITIAL)).to eq("STATUS_INITIAL")
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SUCCESS)).to eq("STATUS_SUCCESS")
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_RETRY)).to eq("STATUS_RETRY")
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_RETRY_PENDING)).to eq("STATUS_RETRY_PENDING")
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_INVALID)).to eq("STATUS_INVALID")
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_DEADLETTER)).to eq("STATUS_DEADLETTER")
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE)).to eq("STATUS_SCHEDULE")
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE_RETRY)).to eq("STATUS_SCHEDULE_RETRY")
+      expect(EventHub::Message.translate_status_code(EventHub::STATUS_SCHEDULE_PENDING)).to eq("STATUS_SCHEDULE_PENDING")
     end
   end
 
-
   context "execution history" do
     it "should have a execution history entry" do
-      allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return('a.stamp')
+      allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return("a.stamp")
 
       # no history initially
       expect(@m.header["execution_history"]).to eq(nil)
@@ -126,7 +118,7 @@ describe EventHub::Message do
       expect(execution_history[0]).to eq("processor" => "processor_name", "timestamp" => "a.stamp")
 
       # add 2nd entry
-      allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return('b.stamp')
+      allow_any_instance_of(EventHub::Message).to receive(:now_stamp).and_return("b.stamp")
       @m.append_to_execution_history("processor_name2")
 
       execution_history = @m.header.get("execution_history")
@@ -143,10 +135,10 @@ describe EventHub::Message do
       @m.status_code = EventHub::STATUS_SUCCESS
       expect(@m.retry?).to eq(false)
 
-      @m.status_code = 'STATUS_RETRY'
+      @m.status_code = "STATUS_RETRY"
       expect(@m.retry?).to eq(false)
 
-      @m.status_code = 'UNKNOWN_CODE'
+      @m.status_code = "UNKNOWN_CODE"
       expect(@m.retry?).to eq(false)
 
       @m.status_code = 90000
@@ -169,13 +161,11 @@ describe EventHub::Message do
       expect(@m.schedule_retry?).to eq(true)
     end
 
-    it 'should response to schedule_pending?' do
+    it "should response to schedule_pending?" do
       expect(@m.schedule_pending?).to eq(false)
 
       @m.status_code = EventHub::STATUS_SCHEDULE_PENDING
       expect(@m.schedule_pending?).to eq(true)
     end
-
   end
-
 end

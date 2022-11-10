@@ -1,5 +1,4 @@
 module EventHub
-
   class Configuration
     include Singleton
     include Helper
@@ -8,10 +7,10 @@ module EventHub
 
     def initialize
       @data = {}
-      @environment = 'development'
+      @environment = "development"
     end
 
-    def load_file(input, env = 'development')
+    def load_file(input, env = "development")
       load_string(IO.read(input), env)
       true
     rescue => e
@@ -19,7 +18,7 @@ module EventHub
       false
     end
 
-    def load_string(json_string, env = 'development')
+    def load_string(json_string, env = "development")
       json = JSON.parse(json_string)
       @data = json[env]
       @environment = env
@@ -28,7 +27,5 @@ module EventHub
       EventHub.logger.info("JSON configuration parsing failed: #{format_string(e.message)}")
       false
     end
-
   end
-
 end
