@@ -44,10 +44,10 @@ for details.
 # define a class and derive it from Eventhub::Processor
 module EventHub
   class PlateStoreRouter < Processor
-	# this is the method to deal with the message
-	def handle_message(metadata,payload)
-	  puts payload
-	end
+    # this is the method to deal with the message
+    def handle_message(metadata,payload)
+      puts payload
+    end
   end
 end
 
