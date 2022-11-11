@@ -53,9 +53,24 @@ module EventHub
       configuration.get("server.ssl") || false
     end
 
+    def server_ssl_client_cert
+      configuration.get("server.ssl.client_cert")
+    end
+
+    def server_ssl_client_key
+      configuration.get("server.ssl.client_key")
+    end
+
+    def server_ssl_ca_cert
+      configuration.get("server.ssl.ca_cert") || "/apps/sys_eventhub1/certs/cacert.pem"
+    end
+
     def ssl_settings
-      return {cert_chain_file: nil, private_key_file: nil} if server_ssl?
-      {}
+      return {} unless server_ssl?
+      {
+        cert_chain_file: server_ssl_client_cert,
+        private_key_file: server_ssl_client_key
+      }
     end
 
     def connection_settings
@@ -127,7 +142,7 @@ module EventHub
         # ssl
         url = "https://" + url
         response = RestClient::Request.execute(method: method, url: url,
-          ssl_ca_file: "/apps/sys_eventhub1/certs/cacert.pem",
+          ssl_ca_file: server_ssl_ca_cert,
           verify_ssl: OpenSSL::SSL::VERIFY_NONE,
           headers: {
             content_type: "application/json",

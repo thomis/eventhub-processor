@@ -72,6 +72,59 @@ parsed = EventHub::ArgumentParser.parse(['-x']) do |parser, options|
 end
 ```
 
+## Configuration
+
+```
+  # simple
+  {
+    "development": {
+      "processor": {
+        "listener_queues": ["component_queue"]
+      }
+    }
+  }
+
+  # with SSL/TLS and defaults
+  {
+    "development": {
+      "server": {
+        "host": "localhost",
+        "port": 5672,
+        "management_port": 15672,
+        "user": "admin",
+        "password": "admin",
+        "vhost": "event_hub",
+        "ssl": true
+      },
+      "processor": {
+        "listener_queues": ["component_queue"]
+      }
+    }
+  }
+
+  # with custom SSL/TLS
+  {
+    "development": {
+      "server": {
+        "host": "localhost",
+        "port": 5672,
+        "management_port": 15672,
+        "user": "admin",
+        "password": "admin",
+        "vhost": "event_hub",
+        "ssl": {
+          "client_cert": "/path/client_cert.pem",
+          "client_key": "/path/client_key.pem",
+          "ca_cert": "/path/ca_cert.pem"
+        }
+      },
+      "processor": {
+        "listener_queues": ["component_queue"]
+      }
+    }
+  }
+```
+
 ## Contributing
 
 1. Fork it

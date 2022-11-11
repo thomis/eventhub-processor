@@ -79,6 +79,33 @@ describe EventHub::Processor do
     expect(processor.server_vhost).to eq("virtual")
   end
 
+  it "should return default ssl.client_cert" do
+    expect(processor.server_ssl_client_cert).to eq(nil)
+  end
+
+  it "should return custom ssl.client_cert" do
+    @configuration.set("server.ssl.client_cert", "/path/client_cert.pem")
+    expect(processor.server_ssl_client_cert).to eq("/path/client_cert.pem")
+  end
+
+  it "should return default ssl.client_key" do
+    expect(processor.server_ssl_client_key).to eq(nil)
+  end
+
+  it "should return custom ssl.client_key" do
+    @configuration.set("server.ssl.client_key", "/path/client_key.pem")
+    expect(processor.server_ssl_client_key).to eq("/path/client_key.pem")
+  end
+
+  it "should return default ssl.ca_cert" do
+    expect(processor.server_ssl_ca_cert).to eq("/apps/sys_eventhub1/certs/cacert.pem")
+  end
+
+  it "should return custom ssl.ca_cert" do
+    @configuration.set("server.ssl.ca_cert", "/path/ca_cert.pem")
+    expect(processor.server_ssl_ca_cert).to eq("/path/ca_cert.pem")
+  end
+
   it "should return default connection settings" do
     expect(processor.connection_settings).to eq(
       {host: "localhost", user: "admin", password: "admin", port: 5672, vhost: "event_hub"}
