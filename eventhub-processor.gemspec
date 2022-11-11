@@ -25,6 +25,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", ">= 11.2.2"
   spec.add_development_dependency "rspec", ">= 3.11.0"
   spec.add_development_dependency "rspec-mocks", "~> 3.11.0"
-  spec.add_development_dependency "standard", "1.16"
+  spec.add_development_dependency "standard", "1.17.0"
   spec.add_development_dependency "simplecov", "~> 0.21"
 end
