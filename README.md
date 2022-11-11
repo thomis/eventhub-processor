@@ -1,4 +1,7 @@
 [![Gem Version](https://badge.fury.io/rb/eventhub-processor.svg)](https://badge.fury.io/rb/eventhub-processor)
+[![Maintainability](https://api.codeclimate.com/v1/badges/180d049db38b0100662d/maintainability)](https://codeclimate.com/github/thomis/eventhub-processor/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/180d049db38b0100662d/test_coverage)](https://codeclimate.com/github/thomis/eventhub-processor/test_coverage)
+[![ci](https://github.com/thomis/eventhub-processor/actions/workflows/ci.yml/badge.svg)](https://github.com/thomis/eventhub-processor/actions/workflows/ci.yml)
 
 
 ## Important information from 2022-07-27
