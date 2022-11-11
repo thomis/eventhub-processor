@@ -85,7 +85,7 @@ Configuration with minimal settings
   }
 ```
 
-Configuration with SSL/TLS, servcer values used are defaults
+Configuration with SSL/TLS. Values shown for host, port, management_port, user, password, and vhost are the defaults. Default for ssl is false.
 ```
   {
     "development": {
