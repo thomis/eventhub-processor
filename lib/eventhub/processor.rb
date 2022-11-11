@@ -67,10 +67,10 @@ module EventHub
 
     def ssl_settings
       return {} unless server_ssl?
-      {
+      {ssl: {
         cert_chain_file: server_ssl_client_cert,
         private_key_file: server_ssl_client_key
-      }
+      }}
     end
 
     def connection_settings

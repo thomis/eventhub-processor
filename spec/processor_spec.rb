@@ -22,7 +22,7 @@ describe EventHub::Processor do
 
   it "should return enabled ssl settings" do
     @configuration.set("server.ssl", true)
-    expect(processor.ssl_settings).to eq({cert_chain_file: nil, private_key_file: nil})
+    expect(processor.ssl_settings).to eq(ssl: {cert_chain_file: nil, private_key_file: nil})
   end
 
   it "should return default host" do
@@ -109,6 +109,31 @@ describe EventHub::Processor do
   it "should return default connection settings" do
     expect(processor.connection_settings).to eq(
       {host: "localhost", user: "admin", password: "admin", port: 5672, vhost: "event_hub"}
+    )
+  end
+
+  it "should return easy ssl connection settings" do
+    @configuration.set("server.ssl", true)
+    expect(processor.connection_settings).to eq(
+      {host: "localhost", user: "admin", password: "admin", port: 5672, vhost: "event_hub", ssl: {cert_chain_file: nil, private_key_file: nil}}
+    )
+  end
+
+  it "should return custom ssl connection settings" do
+    @configuration.set("server.ssl.client_cert", "/path/client_cert.pem")
+    @configuration.set("server.ssl.client_key", "/path/client_key.pem")
+    expect(processor.connection_settings).to eq(
+      {
+        host: "localhost",
+        user: "admin",
+        password: "admin",
+        port: 5672,
+        vhost: "event_hub",
+        ssl: {
+          cert_chain_file: "/path/client_cert.pem",
+          private_key_file: "/path/client_key.pem"
+        }
+      }
     )
   end
 

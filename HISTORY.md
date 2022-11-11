@@ -1,3 +1,7 @@
+## 0.7.1 / 2022-11-11
+
+* Edit: Move ssl settings to ssl key for amqp
+
 ## 0.7.0 / 2022-11-10
 
 * Add: Use of standard ruby style guide, linter, and formatter
