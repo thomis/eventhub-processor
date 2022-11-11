@@ -43,12 +43,12 @@ for details.
 ```Ruby
 # define a class and derive it from Eventhub::Processor
 module EventHub
-	class PlateStoreRouter < Processor
-		# this is the method to deal with the message
-		def handle_message(metadata,payload)
-			puts payload
-		end
+  class PlateStoreRouter < Processor
+	# this is the method to deal with the message
+	def handle_message(metadata,payload)
+	  puts payload
 	end
+  end
 end
 
 # load configuration file if required and start your processor
