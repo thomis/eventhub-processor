@@ -2,8 +2,7 @@ require "spec_helper"
 
 describe EventHub::Processor do
   before(:each) do
-    @configuration = EventHub::Configuration.instance.data = {
-    }
+    @configuration = EventHub::Configuration.instance.data = {}
   end
 
   let(:processor) { EventHub::Processor.new }
