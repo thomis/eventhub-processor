@@ -74,8 +74,8 @@ end
 
 ## Configuration
 
+Configuration with minimal settings
 ```
-  # simple
   {
     "development": {
       "processor": {
@@ -83,8 +83,10 @@ end
       }
     }
   }
+```
 
-  # with SSL/TLS and defaults
+Configuration with SSL/TLS, servcer values used are defaults
+```
   {
     "development": {
       "server": {
@@ -101,8 +103,10 @@ end
       }
     }
   }
+```
 
-  # with custom SSL/TLS
+Configuration with custom SSL/TLS
+```
   {
     "development": {
       "server": {
