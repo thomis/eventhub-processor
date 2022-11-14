@@ -105,6 +105,28 @@ Configuration with SSL/TLS. Values shown for host, port, management_port, user, 
   }
 ```
 
+Configuration with SSL/TLS for rest calls but amqp (disabled amqps).
+```
+  {
+    "development": {
+      "server": {
+        "host": "localhost",
+        "port": 5672,
+        "management_port": 15672,
+        "user": "admin",
+        "password": "admin",
+        "vhost": "event_hub",
+        "ssl": {
+          "amqps": false
+        }
+      },
+      "processor": {
+        "listener_queues": ["component_queue"]
+      }
+    }
+  }
+```
+
 Configuration with custom SSL/TLS
 ```
   {

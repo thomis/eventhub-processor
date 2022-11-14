@@ -65,12 +65,20 @@ module EventHub
       configuration.get("server.ssl.ca_cert") || "/apps/sys_eventhub1/certs/cacert.pem"
     end
 
+    # allows you to use https (ssl/tls) for rest calls but disable ssl/tls for amqps
+    def server_ssl_amqps?
+      return true if configuration.get("server.ssl.amqps").nil?
+      configuration.get("server.ssl.amqps")
+    end
+
     def ssl_settings
-      return {} unless server_ssl?
-      {ssl: {
-        cert_chain_file: server_ssl_client_cert,
-        private_key_file: server_ssl_client_key
-      }}
+      if server_ssl? && server_ssl_amqps?
+        return {ssl: {
+          cert_chain_file: server_ssl_client_cert,
+          private_key_file: server_ssl_client_key
+        }}
+      end
+      {}
     end
 
     def connection_settings

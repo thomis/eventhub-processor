@@ -106,6 +106,15 @@ describe EventHub::Processor do
     expect(processor.server_ssl_ca_cert).to eq("/path/ca_cert.pem")
   end
 
+  it "should return default ssl.amqps" do
+    expect(processor.server_ssl_amqps?).to eq(true)
+  end
+
+  it "should return custom ssl.amqps" do
+    @configuration.set("server.ssl.amqps", false)
+    expect(processor.server_ssl_amqps?).to eq(false)
+  end
+
   it "should return default connection settings" do
     expect(processor.connection_settings).to eq(
       {host: "localhost", user: "admin", password: "admin", port: 5672, vhost: "event_hub"}
@@ -134,6 +143,13 @@ describe EventHub::Processor do
           private_key_file: "/path/client_key.pem"
         }
       }
+    )
+  end
+
+  it "should return easy ssl connection settings with amqps disabled" do
+    @configuration.set("server.ssl.amqps", false)
+    expect(processor.connection_settings).to eq(
+      {host: "localhost", user: "admin", password: "admin", port: 5672, vhost: "event_hub"}
     )
   end
 

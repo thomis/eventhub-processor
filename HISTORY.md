@@ -1,3 +1,7 @@
+## 0.7.2 / 2022-11-14
+
+* Edit: Allow to run rest calls over ssl/tls but amqp (disabled amqps)
+
 ## 0.7.1 / 2022-11-11
 
 * Edit: Move ssl settings to ssl key for amqp
