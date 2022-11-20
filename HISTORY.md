@@ -1,3 +1,7 @@
+## 0.7.3 / 2022-11-??
+
+* Edit: .... (rest / https towards local host)
+
 ## 0.7.2 / 2022-11-14
 
 * Edit: Allow to run rest calls over ssl/tls but amqp (disabled amqps)
